@@ -11,6 +11,7 @@
     <description>区块链Demo</description>
     <modules>
         <module>chain-eureka</module>
+        <module>chain-peer</module>
     </modules>
 
     <parent>
