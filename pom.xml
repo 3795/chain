@@ -12,6 +12,8 @@
     <modules>
         <module>chain-eureka</module>
         <module>chain-peer</module>
+        <module>chain-order</module>
+        <module>chain-common</module>
     </modules>
 
     <parent>
