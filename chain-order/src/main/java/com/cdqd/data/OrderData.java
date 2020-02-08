@@ -1,6 +1,7 @@
 package com.cdqd.data;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,15 +15,15 @@ public class OrderData {
 
     private Integer port;   // 本节点的端口
 
-    private String leaderIp;        // leader节点的IP地址
+    private String leaderAddress;        // leader节点的IP地址
 
-    private boolean leader;
+    private boolean leader;     // 该Order节点是否是Leader节点
 
-    private String name;
+    private String name;        // Order节点名称
 
-    private int id;
+    private int id;     // Order节点Id
 
-    private String address;
+    private String address; // 该Order节点的网络地址
 
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
 
@@ -35,25 +36,25 @@ public class OrderData {
         this.leader = leader;
         this.name = name;
         this.id = id;
-        this.address = "http://" + ip + ":" + port;
+        this.address = ip + ":" + port;
     }
 
-    public OrderData(String ip, Integer port, boolean leader, String name, int id, String leaderIp) {
+    public OrderData(String ip, Integer port, boolean leader, String name, int id, String leaderAddress) {
         this.ip = ip;
         this.port = port;
-        this.leaderIp = leaderIp;
+        this.leaderAddress = leaderAddress;
         this.leader = leader;
         this.name = name;
         this.id = id;
-        this.address = "http://" + ip + ":" + port;
+        this.address = ip + ":" + port;
     }
 
     public void setLeader(boolean leader) {
         this.leader = leader;
     }
 
-    public void setLeaderIp(String leaderIp) {
-        this.leaderIp = leaderIp;
+    public void setLeaderAddress(String leaderAddress) {
+        this.leaderAddress = leaderAddress;
     }
 
     public String getIp() {
@@ -64,8 +65,8 @@ public class OrderData {
         return port;
     }
 
-    public String getLeaderIp() {
-        return leaderIp;
+    public String getLeaderAddress() {
+        return leaderAddress;
     }
 
     public boolean isLeader() {
@@ -84,13 +85,30 @@ public class OrderData {
         return address;
     }
 
+    public Map<Integer, String> getOrderAddressMap() {
+        return orderAddressMap;
+    }
+
     /**
      * 添加其他Order节点的网络地址
-     * @param orderId       节点ID
-     * @param orderAddress  节点网络地址
+     *
+     * @param orderId      节点ID
+     * @param orderAddress 节点网络地址
      */
     public void addAddress(int orderId, String orderAddress) {
         orderAddressMap.put(orderId, orderAddress);
+    }
+
+    /**
+     * 获取该Order节点保存的所有其他Order节点网络地址
+     * @return
+     */
+    public List<String> getAddressList() {
+        List<String> list = new ArrayList<>();
+        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
+            list.add(entry.getValue());
+        }
+        return list;
     }
 
 }

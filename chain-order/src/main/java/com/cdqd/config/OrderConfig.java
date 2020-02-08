@@ -17,7 +17,7 @@ public class OrderConfig {
 
     private int id;
 
-    private String leaderIp;
+    private String leaderAddress;
 
     public boolean isLeader() {
         return leader;
@@ -43,11 +43,11 @@ public class OrderConfig {
         this.id = id;
     }
 
-    public String getLeaderIp() {
-        return leaderIp;
+    public String getLeaderAddress() {
+        return leaderAddress;
     }
 
-    public void setLeaderIp(String leaderIp) {
-        this.leaderIp = leaderIp;
+    public void setLeaderAddress(String leaderAddress) {
+        this.leaderAddress = leaderAddress;
     }
 }

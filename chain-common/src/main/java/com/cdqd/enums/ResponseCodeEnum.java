@@ -7,7 +7,7 @@ public enum ResponseCodeEnum {
     SUCCESS(0, "SUCCESS"),
 
     ERROR(10, "ERROR"),
-    REMOTE_CALL_FAIL(11, "Remote Call Failed"),
+    REMOTE_CALL_FAILED(11, "Remote Call Failed"),
     INSERT_FAILED(12, "插入记录失败"),
     UPDATE_FAILED(13, "更新记录失败"),
     DELETE_FAILED(14, "删除记录失败"),
