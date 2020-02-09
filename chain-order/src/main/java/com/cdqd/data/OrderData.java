@@ -1,5 +1,7 @@
 package com.cdqd.data;
 
+import com.cdqd.core.Block;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ public class OrderData {
     private int id;     // Order节点Id
 
     private String address; // 该Order节点的网络地址
+
+    private Block prevBlock;        // 存储的上一个区块
 
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
 
