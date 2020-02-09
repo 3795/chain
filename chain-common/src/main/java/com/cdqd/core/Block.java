@@ -60,12 +60,26 @@ public class Block {
      * @return
      */
     public static Block generateInitialBlock() {
-        return new Block(1, new BlockContent("Initial Block Content"), "");
+        return new Block(1, new BlockContent("Initial Block Content"), "0");
     }
 
     public String getHashValue() {
         return hashValue;
     }
 
+    public List<BlockContent> getContentList() {
+        return contentList;
+    }
 
+    public int getIndex() {
+        return index;
+    }
+
+    public String getPrevHashValue() {
+        return prevHashValue;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
 }

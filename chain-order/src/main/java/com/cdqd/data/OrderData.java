@@ -23,11 +23,11 @@ public class OrderData {
 
     private String name;        // Order节点名称
 
-    private int id;     // Order节点Id
+    private int id;     // Order节点Id1
 
     private String address; // 该Order节点的网络地址
 
-    private Block prevBlock;        // 存储的上一个区块
+    private volatile String prevHashValue;        // 存储的上一个区块的hash值
 
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
 
@@ -99,7 +99,7 @@ public class OrderData {
      * @param orderId      节点ID
      * @param orderAddress 节点网络地址
      */
-    public void addAddress(int orderId, String orderAddress) {
+    public void addOrderAddress(int orderId, String orderAddress) {
         orderAddressMap.put(orderId, orderAddress);
     }
 
@@ -115,4 +115,11 @@ public class OrderData {
         return list;
     }
 
+    public String getPrevHashValue() {
+        return prevHashValue;
+    }
+
+    public void setPrevHashValue(String prevHashValue) {
+        this.prevHashValue = prevHashValue;
+    }
 }

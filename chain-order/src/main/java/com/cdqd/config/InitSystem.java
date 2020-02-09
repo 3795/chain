@@ -2,7 +2,7 @@ package com.cdqd.config;
 
 import com.cdqd.core.Block;
 import com.cdqd.data.OrderData;
-import com.cdqd.exception.ServerException;
+import com.cdqd.service.BlockService;
 import com.cdqd.service.OrderFunction;
 import com.cdqd.service.OrderService;
 import org.slf4j.Logger;
@@ -11,17 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
 import java.util.Map;
+
+import static com.cdqd.data.MetaData.orderData;
 
 /**
  * Description: 加载Order节点数据
  * Created At 2020/2/7
  */
 @Component
-public class InitData {
+public class InitSystem {
 
-    private static Logger logger = LoggerFactory.getLogger(InitData.class);
+    private static Logger logger = LoggerFactory.getLogger(InitSystem.class);
 
     @Autowired
     private ServerInfo serverInfo;
@@ -35,7 +36,35 @@ public class InitData {
     @Autowired
     private OrderFunction orderFunction;
 
-    private static volatile OrderData orderData;
+    @Autowired
+    private BlockService blockService;
+
+    @PostConstruct
+    public void init() {
+        // 1. 初始化Order节点本身的数据
+        initOrderData();
+
+        // 2. 认证节点身份
+        nodeAuthentication();
+
+        // 3. 接入网络
+        if (!accessNodeNetwork()) {
+            return;
+        }
+
+        // 4. 同步区块或者生成初始区块
+        if (orderData.isLeader()) {
+            initBlockChainSystem();
+        } else {
+            if (!syncBlockChain()) {
+                return;
+            }
+        }
+
+        logger.info("接入现有节点网络成功");
+        logger.info("节点启动成功，Id:{}, Name:{}, IP:{}, Port:{}", orderData.getId(), orderData.getName(),
+                orderData.getIp(), orderData.getPort());
+    }
 
     /**
      * 初始化节点数据
@@ -64,13 +93,13 @@ public class InitData {
      * 加入现有的节点网络
      */
     private boolean accessNodeNetwork() {
-        orderData.addAddress(orderData.getId(), orderData.getAddress());        // 将自身的地址加入map
+        orderData.addOrderAddress(orderData.getId(), orderData.getAddress());        // 将自身的地址加入map
         // 3. 对于非Leader节点，需要从Leader节点处获取所有的Order节点列表，并向其他节点广播自身的网络地址
         if (!orderData.isLeader()) {
             try {
                 Map<String, String> orderAddressMap = orderService.fetchAddress(orderData.getLeaderAddress());
                 for (Map.Entry<String, String> entry : orderAddressMap.entrySet()) {
-                    this.addOrderAddress(Integer.parseInt(entry.getKey()), entry.getValue());
+                    orderData.addOrderAddress(Integer.parseInt(entry.getKey()), entry.getValue());
                     boolean success = orderFunction.register(entry.getValue(), orderData.getId(), orderData.getAddress());
                     if (!success) {
                         // TODO 将该目标地址加入CheckAliveMap中，后续判断是否存活
@@ -86,6 +115,7 @@ public class InitData {
 
     /**
      * 从Leader节点处同步区块链
+     *
      * @return
      */
     private boolean syncBlockChain() {
@@ -95,69 +125,17 @@ public class InitData {
 
     /**
      * 初始化区块链系统
+     *
      * @return
      */
     private void initBlockChainSystem() {
         // 判断是否有区块存在（即节点重启情况）
-        if (!blockChainSystemExist()) {
+        if (!blockService.exist()) {
             Block metadataBlock = Block.generateInitialBlock();
-//            metadataBlock.
-            // 将元区块放入存储系统
+            blockService.insertBlock(metadataBlock);   // 将元区块放入存储系统
+            orderData.setPrevHashValue(metadataBlock.getHashValue());
             logger.info("区块链网络初始化完成");
         }
 
-    }
-
-    /**
-     * 判断该节点之前是否存储过区块
-     * @return
-     */
-    private boolean blockChainSystemExist() {
-        return true;
-    }
-
-    @PostConstruct
-    public void init() {
-        // 1. 初始化Order节点本身的数据
-        initOrderData();
-
-        // 2. 认证节点身份
-        nodeAuthentication();
-
-        // 3. 接入网络
-        if (!accessNodeNetwork()) {
-            return;
-        }
-
-        // 4. 同步区块或者生成初始区块
-        if (orderData.isLeader()) {
-            initBlockChainSystem();
-        } else {
-            if (!syncBlockChain()) {
-                return;
-            }
-        }
-
-
-        logger.info("接入现有节点网络成功");
-        logger.info("节点启动成功，Id:{}, Name:{}, IP:{}, Port:{}", orderData.getId(), orderData.getName(),
-                orderData.getIp(), orderData.getPort());
-    }
-
-    /**
-     * 添加Order节点网络地址
-     * @param orderId
-     * @param orderAddress
-     */
-    public void addOrderAddress(Integer orderId, String orderAddress) {
-        orderData.addAddress(orderId, orderAddress);
-    }
-
-    /**
-     * 获取本节点保存的Order节点Id和网络地址
-     * @return
-     */
-    public Map<Integer, String> getOrderAddressMap() {
-        return orderData.getOrderAddressMap();
     }
 }
