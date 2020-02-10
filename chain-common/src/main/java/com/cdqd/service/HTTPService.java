@@ -17,6 +17,14 @@ public interface HTTPService<T> {
     String get(String url);
 
     /**
+     * 执行GET请求
+     * @param url
+     * @param params
+     * @return
+     */
+    String get(String url, Map<String, String> params);
+
+    /**
      * 执行POST请求
      * @param url       资源地址
      * @param paramMap  请求参数

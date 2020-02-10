@@ -69,10 +69,6 @@
   </sql>
   <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.cdqd.model.BlockContentModelExample" >
     select
-    <if test="distinct" >
-      distinct
-    </if>
-    'true' as QUERYID,
     <include refid="Base_Column_List" />
     from block_content
     <if test="_parameter != null" >

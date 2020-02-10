@@ -1,11 +1,14 @@
 package com.cdqd.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.cdqd.core.Block;
+import com.cdqd.dto.BlockDTO;
 import com.cdqd.service.HTTPService;
 import com.cdqd.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,28 @@ public class OrderServiceImpl implements OrderService {
         paramMap.put("orderId", orderId);
         paramMap.put("orderAddress", orderAddress);
         httpService.post(HTTP_PREFIX + targetAddress + "/order/register", paramMap);
+    }
+
+    @Override
+    public int getLeaderIndex(String leaderAddress) {
+        String responseStr = httpService.get(HTTP_PREFIX + leaderAddress + "/order/block-index");
+        return Integer.parseInt(responseStr);
+    }
+
+    @Override
+    public List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size) {
+        Map<String, String> params = new HashMap<>();
+        params.put("index", blockIndex.toString());
+        params.put("size", size.toString());
+        String responseStr = httpService.get(HTTP_PREFIX + targetAddress + "/order/pull-block", params);
+        List list = JSON.parseObject(responseStr, List.class);
+        List<Block> blockList = new ArrayList<>();
+        for (Object object : list) {
+            String str = JSON.toJSONString(object);
+            BlockDTO blockDTO = JSON.parseObject(str, BlockDTO.class);
+            blockList.add(new Block(blockDTO));
+        }
+        return blockList;
     }
 
 }

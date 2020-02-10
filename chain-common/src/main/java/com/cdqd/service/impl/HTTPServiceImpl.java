@@ -32,6 +32,18 @@ public class HTTPServiceImpl<T> implements HTTPService<T> {
     }
 
     @Override
+    public String get(String url, Map<String, String> params) {
+        url += "?";
+        StringBuilder urlBuilder = new StringBuilder(url);
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            urlBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        url = urlBuilder.toString();
+        ResponseEntity<ServerResponseVO> response = restTemplate.getForEntity(url, ServerResponseVO.class);
+        return handleResponse(response);
+    }
+
+    @Override
     public String post(String url, Map<String, Object> paramMap) {
         MultiValueMap<String, Object> map = map2LinkedMultiValueMap(paramMap);
         HttpHeaders headers = new HttpHeaders();

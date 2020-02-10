@@ -1,5 +1,8 @@
 package com.cdqd.service;
 
+import com.cdqd.core.Block;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,6 +13,7 @@ public interface OrderService {
 
     /**
      * 拉取其他Order节点网络地址
+     *
      * @param address
      * @return
      */
@@ -17,9 +21,28 @@ public interface OrderService {
 
     /**
      * 接受其他节点的注册
+     *
      * @param targetAddress
      * @param orderId
      * @param orderAddress
      */
     void register(String targetAddress, Integer orderId, String orderAddress);
+
+    /**
+     * 查询Leader节点的区块高度
+     *
+     * @param leaderAddress
+     * @return
+     */
+    int getLeaderIndex(String leaderAddress);
+
+    /**
+     * 从其他节点拉取区块
+     *
+     * @param targetAddress
+     * @param blockIndex
+     * @param size
+     * @return
+     */
+    List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size);
 }

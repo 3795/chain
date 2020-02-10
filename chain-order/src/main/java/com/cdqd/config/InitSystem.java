@@ -1,10 +1,10 @@
 package com.cdqd.config;
 
 import com.cdqd.core.Block;
+import com.cdqd.data.ChainData;
 import com.cdqd.data.OrderData;
-import com.cdqd.service.BlockService;
-import com.cdqd.service.OrderFunction;
-import com.cdqd.service.OrderService;
+import com.cdqd.service.BlockChainService;
+import com.cdqd.service.NetworkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.Map;
 
+import static com.cdqd.data.MetaData.chainData;
 import static com.cdqd.data.MetaData.orderData;
 
 /**
@@ -31,13 +32,10 @@ public class InitSystem {
     private OrderConfig orderConfig;
 
     @Autowired
-    private OrderService orderService;
+    private BlockChainService blockChainService;
 
     @Autowired
-    private OrderFunction orderFunction;
-
-    @Autowired
-    private BlockService blockService;
+    private NetworkService networkService;
 
     @PostConstruct
     public void init() {
@@ -77,7 +75,7 @@ public class InitSystem {
             orderData = new OrderData(serverInfo.getHost(), serverInfo.getServerPort(),
                     orderConfig.isLeader(), orderConfig.getName(), orderConfig.getId(), orderConfig.getLeaderAddress());
         }
-
+        chainData = new ChainData();
         logger.info("初始化节点数据成功");
     }
 
@@ -97,10 +95,13 @@ public class InitSystem {
         // 3. 对于非Leader节点，需要从Leader节点处获取所有的Order节点列表，并向其他节点广播自身的网络地址
         if (!orderData.isLeader()) {
             try {
-                Map<String, String> orderAddressMap = orderService.fetchAddress(orderData.getLeaderAddress());
+                Map<String, String> orderAddressMap = networkService.fetchAddressFromLeader();
                 for (Map.Entry<String, String> entry : orderAddressMap.entrySet()) {
+                    if (entry.getValue().equals(orderData.getAddress())) {
+                        continue;
+                    }
                     orderData.addOrderAddress(Integer.parseInt(entry.getKey()), entry.getValue());
-                    boolean success = orderFunction.register(entry.getValue(), orderData.getId(), orderData.getAddress());
+                    boolean success = networkService.register(entry.getValue());
                     if (!success) {
                         // TODO 将该目标地址加入CheckAliveMap中，后续判断是否存活
                     }
@@ -119,7 +120,23 @@ public class InitSystem {
      * @return
      */
     private boolean syncBlockChain() {
-        logger.info("区块同步成功，目前区块高度5102，增加了528块，耗时1506ms");
+        // 查询Leader节点的区块高度
+        int leaderIndex = networkService.getLeaderIndex();
+        int initIndex = 0;
+        if (blockChainService.chainExist()) {
+            Block block = blockChainService.queryPrevBlock();  // 查询节点自身区块的高度
+            chainData.set(block.getIndex(), block.getHashValue());
+            initIndex = block.getIndex();
+            if (leaderIndex <= initIndex) {
+                return true;
+            }
+        }
+        try {
+            blockChainService.syncBlock(initIndex + 1, leaderIndex);
+        } catch (Exception e) {
+            logger.warn("同步区块失败");
+            return false;
+        }
         return true;
     }
 
@@ -130,12 +147,13 @@ public class InitSystem {
      */
     private void initBlockChainSystem() {
         // 判断是否有区块存在（即节点重启情况）
-        if (!blockService.exist()) {
+        if (!blockChainService.chainExist()) {
             Block metadataBlock = Block.generateInitialBlock();
-            blockService.insertBlock(metadataBlock);   // 将元区块放入存储系统
-            orderData.setPrevHashValue(metadataBlock.getHashValue());
+            blockChainService.insertBlock(metadataBlock);   // 将元区块放入存储系统
             logger.info("区块链网络初始化完成");
+        } else {
+            Block prevBlock = blockChainService.queryPrevBlock();
+            chainData.set(prevBlock.getIndex(), prevBlock.getHashValue());
         }
-
     }
 }

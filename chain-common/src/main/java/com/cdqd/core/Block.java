@@ -1,11 +1,15 @@
 package com.cdqd.core;
 
-import com.alibaba.fastjson.JSON;
-import com.cdqd.util.EncryptUtil;
+import com.cdqd.dto.BlockContentDTO;
+import com.cdqd.dto.BlockDTO;
+import com.cdqd.model.BlockModel;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static com.cdqd.util.BlockUtil.sumHashValue;
+//import static com.cdqd.
 
 /**
  * Description: 区块数据结构
@@ -32,31 +36,57 @@ public class Block {
         this.hashValue = sumHashValue(this);
     }
 
-    public Block(int index, List<BlockContent> contentList, String prevHashValue, Date createTime) {
+    public Block(int index, List<String> contents, String prevHashValue) {
         this.index = index;
-        this.contentList = contentList;
+        this.contentList = new ArrayList<>();
+        for (String content : contents) {
+            this.contentList.add(new BlockContent(content));
+        }
         this.prevHashValue = prevHashValue;
-        this.createTime = createTime;
+        this.createTime = new Date();
         this.hashValue = sumHashValue(this);
     }
 
     /**
-     * 计算区块的Hash值
-     * @param block
-     * @return
+     * 根据数据模型构造区块
+     *
+     * @param blockModel
+     * @param contentList
      */
-    private static String sumHashValue(Block block) {
-        StringBuilder buffer = new StringBuilder();
-        for (BlockContent content : block.contentList) {
-            buffer.append(JSON.toJSONString(content)).append(",");
+    public Block(BlockModel blockModel, List<BlockContent> contentList) {
+        this.index = blockModel.getBlockIndex();
+        this.hashValue = blockModel.getHashValue();
+        this.prevHashValue = blockModel.getPrevHashValue();
+        this.createTime = blockModel.getCreateTime();
+        this.contentList = contentList;
+    }
+
+    /**
+     * 根据数据模型构造区块
+     *
+     * @param blockModel
+     */
+    public Block(BlockModel blockModel) {
+        this.index = blockModel.getBlockIndex();
+        this.hashValue = blockModel.getHashValue();
+        this.prevHashValue = blockModel.getPrevHashValue();
+        this.createTime = blockModel.getCreateTime();
+    }
+
+    public Block(BlockDTO blockDTO) {
+        this.index = blockDTO.getIndex();
+        this.hashValue = blockDTO.getHashValue();
+        this.prevHashValue = blockDTO.getPrevHashValue();
+        this.createTime = blockDTO.getCreateTime();
+        this.contentList = new ArrayList<>();
+        for (BlockContentDTO dto : blockDTO.getContentList()) {
+            this.contentList.add(new BlockContent(dto.getContent()));
         }
-        String content = String.format("Index:%d, ContentList:%s, PrevHashValue:%s, CreateTime:%s",
-                block.index, buffer.toString(), block.prevHashValue, block.createTime);
-        return EncryptUtil.md5(content);
     }
 
     /**
      * 生成区块链系统中的第一个区块
+     *
      * @return
      */
     public static Block generateInitialBlock() {

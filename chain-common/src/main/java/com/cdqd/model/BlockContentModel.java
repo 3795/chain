@@ -1,7 +1,5 @@
 package com.cdqd.model;
 
-import com.cdqd.core.BlockContent;
-
 public class BlockContentModel {
     private Integer id;
 
@@ -9,9 +7,9 @@ public class BlockContentModel {
 
     private String content;
 
-    public BlockContentModel(int blockIndex, BlockContent blockContent) {
+    public BlockContentModel(Integer blockIndex, String content) {
         this.blockIndex = blockIndex;
-        this.content = blockContent.getContent();
+        this.content = content;
     }
 
     public Integer getId() {

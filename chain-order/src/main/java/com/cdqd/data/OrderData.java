@@ -1,9 +1,5 @@
 package com.cdqd.data;
 
-import com.cdqd.core.Block;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,8 +22,6 @@ public class OrderData {
     private int id;     // Order节点Id1
 
     private String address; // 该Order节点的网络地址
-
-    private volatile String prevHashValue;        // 存储的上一个区块的hash值
 
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
 
@@ -103,23 +97,4 @@ public class OrderData {
         orderAddressMap.put(orderId, orderAddress);
     }
 
-    /**
-     * 获取该Order节点保存的所有其他Order节点网络地址
-     * @return
-     */
-    public List<String> getAddressList() {
-        List<String> list = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
-            list.add(entry.getValue());
-        }
-        return list;
-    }
-
-    public String getPrevHashValue() {
-        return prevHashValue;
-    }
-
-    public void setPrevHashValue(String prevHashValue) {
-        this.prevHashValue = prevHashValue;
-    }
 }
