@@ -56,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
         for (Object object : list) {
             String str = JSON.toJSONString(object);
             BlockDTO blockDTO = JSON.parseObject(str, BlockDTO.class);
-            blockList.add(new Block(blockDTO));
+            blockList.add(Block.blockDTO2Block(blockDTO));
         }
         return blockList;
     }

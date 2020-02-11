@@ -47,4 +47,11 @@ public interface BlockChainService {
      * @param endIndex   终止区块索引
      */
     void syncBlock(Integer startIndex, Integer endIndex);
+
+    /**
+     * 打包区块，
+     * @param messageList
+     * @return
+     */
+    boolean packAndBroadcast(List<String> messageList);
 }

@@ -1,5 +1,6 @@
 package com.cdqd.controller;
 
+import com.cdqd.component.KafkaProducer;
 import com.cdqd.core.Block;
 import com.cdqd.data.MetaData;
 import com.cdqd.enums.ResponseCodeEnum;
@@ -28,6 +29,9 @@ public class OrderController {
 
     @Autowired
     private BlockChainService blockChainService;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
 
     /**
      * 拉取其他Order节点的网络地址
@@ -81,13 +85,26 @@ public class OrderController {
 
     /**
      * 添加内容，并生成区块
+     *
      * @param contents
      * @return
      */
     @PostMapping("/add-block")
     public ServerResponseVO addBlock(@RequestParam("contents") List<String> contents) {
-        Block block = new Block(chainData.getIndex() + 1, contents, chainData.getPrevHashValue());
+        Block block = Block.generateBlock(chainData, contents);
         blockChainService.insertBlock(block);
+        return ServerResponseVO.success("添加成功");
+    }
+
+    /**
+     * Peer节点向Order节点提交内容
+     *
+     * @param data
+     * @return
+     */
+    @PostMapping("/data")
+    public ServerResponseVO kafka(@RequestParam("data") String data) {
+        kafkaProducer.send(data);
         return ServerResponseVO.success("添加成功");
     }
 }

@@ -1,7 +1,7 @@
 package com.cdqd.config;
 
 import com.cdqd.core.Block;
-import com.cdqd.data.ChainData;
+import com.cdqd.core.ChainData;
 import com.cdqd.data.OrderData;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.service.NetworkService;

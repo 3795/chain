@@ -65,7 +65,7 @@ public class BlockServiceImpl implements BlockService {
         if (blockModelList.size() == 0) {
             throw new ServerException(ResponseCodeEnum.EMPTY_CHAIN);
         }
-        return new Block(blockModelList.get(0));
+        return Block.blockModel2Block(blockModelList.get(0), null);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class BlockServiceImpl implements BlockService {
         List<Block> blockList = new ArrayList<>();
         for (BlockModel model : blockModelList) {
             List<BlockContent> contentList = queryContentByBlockIndex(model.getBlockIndex());
-            blockList.add(new Block(model, contentList));
+            blockList.add(Block.blockModel2Block(model, contentList));
         }
         return blockList;
     }

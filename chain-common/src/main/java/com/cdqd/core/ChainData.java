@@ -1,4 +1,4 @@
-package com.cdqd.data;
+package com.cdqd.core;
 
 /**
  * Description: 本地存储区块链的信息

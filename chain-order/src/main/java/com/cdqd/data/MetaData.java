@@ -1,5 +1,7 @@
 package com.cdqd.data;
 
+import com.cdqd.core.ChainData;
+
 /**
  * Description: 系统元数据
  * Created At 2020/2/9

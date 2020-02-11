@@ -15,7 +15,7 @@ public class OrderData {
 
     private String leaderAddress;        // leader节点的IP地址
 
-    private boolean leader;     // 该Order节点是否是Leader节点
+    private volatile boolean leader;     // 该Order节点是否是Leader节点
 
     private String name;        // Order节点名称
 

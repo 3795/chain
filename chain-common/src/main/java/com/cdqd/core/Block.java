@@ -5,11 +5,11 @@ import com.cdqd.dto.BlockDTO;
 import com.cdqd.model.BlockModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static com.cdqd.util.BlockUtil.sumHashValue;
-//import static com.cdqd.
 
 /**
  * Description: 区块数据结构
@@ -27,16 +27,7 @@ public class Block {
 
     private Date createTime;        // 区块创建时间
 
-    public Block(int index, BlockContent blockContent, String prevHashValue) {
-        this.index = index;
-        this.contentList = new ArrayList<>();
-        this.contentList.add(blockContent);
-        this.prevHashValue = prevHashValue;
-        this.createTime = new Date();
-        this.hashValue = sumHashValue(this);
-    }
-
-    public Block(int index, List<String> contents, String prevHashValue) {
+    private Block(int index, List<String> contents, String prevHashValue) {
         this.index = index;
         this.contentList = new ArrayList<>();
         for (String content : contents) {
@@ -48,40 +39,23 @@ public class Block {
     }
 
     /**
-     * 根据数据模型构造区块
+     * 模型转换
      *
      * @param blockModel
      * @param contentList
+     * @return
      */
-    public Block(BlockModel blockModel, List<BlockContent> contentList) {
-        this.index = blockModel.getBlockIndex();
-        this.hashValue = blockModel.getHashValue();
-        this.prevHashValue = blockModel.getPrevHashValue();
-        this.createTime = blockModel.getCreateTime();
-        this.contentList = contentList;
+    public static Block blockModel2Block(BlockModel blockModel, List<BlockContent> contentList) {
+        return new Block(blockModel, contentList);
     }
 
     /**
-     * 根据数据模型构造区块
-     *
-     * @param blockModel
+     * 模型转换
+     * @param blockDTO
+     * @return
      */
-    public Block(BlockModel blockModel) {
-        this.index = blockModel.getBlockIndex();
-        this.hashValue = blockModel.getHashValue();
-        this.prevHashValue = blockModel.getPrevHashValue();
-        this.createTime = blockModel.getCreateTime();
-    }
-
-    public Block(BlockDTO blockDTO) {
-        this.index = blockDTO.getIndex();
-        this.hashValue = blockDTO.getHashValue();
-        this.prevHashValue = blockDTO.getPrevHashValue();
-        this.createTime = blockDTO.getCreateTime();
-        this.contentList = new ArrayList<>();
-        for (BlockContentDTO dto : blockDTO.getContentList()) {
-            this.contentList.add(new BlockContent(dto.getContent()));
-        }
+    public static Block blockDTO2Block(BlockDTO blockDTO) {
+        return new Block(blockDTO);
     }
 
     /**
@@ -90,7 +64,18 @@ public class Block {
      * @return
      */
     public static Block generateInitialBlock() {
-        return new Block(1, new BlockContent("Initial Block Content"), "0");
+        return new Block(1, Collections.singletonList("Initial Block Content"), "0");
+    }
+
+    /**
+     * 生成一个新区块
+     *
+     * @param chainData
+     * @param contents
+     * @return
+     */
+    public static Block generateBlock(ChainData chainData, List<String> contents) {
+        return new Block(chainData.getIndex() + 1, contents, chainData.getPrevHashValue());
     }
 
     public String getHashValue() {
@@ -111,5 +96,24 @@ public class Block {
 
     public Date getCreateTime() {
         return createTime;
+    }
+
+    private Block(BlockModel blockModel, List<BlockContent> contentList) {
+        this.index = blockModel.getBlockIndex();
+        this.hashValue = blockModel.getHashValue();
+        this.prevHashValue = blockModel.getPrevHashValue();
+        this.createTime = blockModel.getCreateTime();
+        this.contentList = contentList;
+    }
+
+    private Block(BlockDTO blockDTO) {
+        this.index = blockDTO.getIndex();
+        this.hashValue = blockDTO.getHashValue();
+        this.prevHashValue = blockDTO.getPrevHashValue();
+        this.createTime = blockDTO.getCreateTime();
+        this.contentList = new ArrayList<>();
+        for (BlockContentDTO dto : blockDTO.getContentList()) {
+            this.contentList.add(new BlockContent(dto.getContent()));
+        }
     }
 }
