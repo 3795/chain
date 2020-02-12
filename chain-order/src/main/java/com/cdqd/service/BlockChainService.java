@@ -43,13 +43,15 @@ public interface BlockChainService {
     /**
      * 以Leader节点为准，同步区块
      *
-     * @param startIndex 起始区块索引
-     * @param endIndex   终止区块索引
+     * @param targetAddress 目标节点地址
+     * @param startIndex    起始区块索引
+     * @param endIndex      终止区块索引
      */
-    void syncBlock(Integer startIndex, Integer endIndex);
+    void syncBlock(String targetAddress, Integer startIndex, Integer endIndex);
 
     /**
      * 打包区块，写入区块，并向其他Order节点广播该区块
+     *
      * @param messageList
      * @return
      */
@@ -57,6 +59,7 @@ public interface BlockChainService {
 
     /**
      * 向其他节点广播区块
+     *
      * @param block
      * @return
      */

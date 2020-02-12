@@ -150,4 +150,13 @@ public class OrderController {
         return ServerResponseVO.success("OK");
     }
 
+    /**
+     * 响应其他节点的心跳呼叫，返回本节点内容的区块高度
+     * @return
+     */
+    @GetMapping("/heart")
+    public ServerResponseVO heart() {
+        return ServerResponseVO.success(chainData.getIndex());
+    }
+
 }

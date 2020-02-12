@@ -26,13 +26,14 @@ public class OrderData {
 
     private String address; // 该Order节点的网络地址
 
-    private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
+    // 记录其他Order节点的地址
+    private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();
 
-    // 死活不明的节点记录表，map<orderId, count>. OrderId: 节点ID, count: 重试次数
-    private volatile Map<Integer, Integer> doubtNodeMap = new ConcurrentHashMap<>();
+    // 记录死活不明的Order节点，map<orderId, count>. OrderId: 节点ID, count: 重试次数
+    private volatile Map<Integer, Integer> doubtOrderMap = new ConcurrentHashMap<>();
 
-    public OrderData() {
-    }
+    // 记录每个Order节点的区块高度，map<orderId, blockIndex>. OrderId: 节点ID, blockIndex: 该节点内部的区块高度
+    private volatile Map<Integer, Integer> orderBlockIndex = new ConcurrentHashMap<>();
 
     public OrderData(String ip, Integer port, boolean leader, String name, int id) {
         this.ip = ip;
@@ -101,16 +102,36 @@ public class OrderData {
      */
     public void addOrderAddress(int orderId, String orderAddress) {
         orderAddressMap.put(orderId, orderAddress);
+        putOrderBlockIndex(orderId, 0);     // 默认的区块高度都为0
     }
 
-    public void addDoubtNode(int orderId) {
-        if (!doubtNodeMap.containsKey(orderId)) {
-            this.doubtNodeMap.put(orderId, 0);
+    /**
+     * 添加疑似节点
+     *
+     * @param orderId
+     */
+    public void addDoubtOrder(int orderId) {
+        if (!doubtOrderMap.containsKey(orderId)) {
+            this.doubtOrderMap.put(orderId, 0);
         }
     }
 
-    public Map<Integer, Integer> getDoubtNodeMap() {
-        return doubtNodeMap;
+    /**
+     * 添加或更新节点区块高度记录
+     *
+     * @param orderId
+     * @param blockIndex
+     */
+    public void putOrderBlockIndex(int orderId, int blockIndex) {
+        orderBlockIndex.put(orderId, blockIndex);
+    }
+
+    public Map<Integer, Integer> getDoubtOrderMap() {
+        return doubtOrderMap;
+    }
+
+    public Map<Integer, Integer> getOrderBlockIndex() {
+        return orderBlockIndex;
     }
 
     /**
@@ -140,7 +161,7 @@ public class OrderData {
             if (entry.getValue().equals(this.address)) {
                 continue;
             }
-            if (this.doubtNodeMap.containsKey(entry.getKey())) {
+            if (this.doubtOrderMap.containsKey(entry.getKey())) {
                 continue;       // 跳过生死不明的节点
             }
             map.put(entry.getKey(), entry.getValue());

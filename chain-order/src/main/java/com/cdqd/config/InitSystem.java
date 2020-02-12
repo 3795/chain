@@ -132,7 +132,7 @@ public class InitSystem {
             }
         }
         try {
-            blockChainService.syncBlock(initIndex + 1, leaderIndex);
+            blockChainService.syncBlock(orderData.getLeaderAddress(), initIndex + 1, leaderIndex);
         } catch (Exception e) {
             logger.warn("同步区块失败");
             return false;

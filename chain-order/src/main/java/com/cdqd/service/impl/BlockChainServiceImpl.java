@@ -39,7 +39,7 @@ public class BlockChainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public void insertBlock(Block block) {
+    public synchronized void insertBlock(Block block) {
         if (!BlockUtil.verify(chainData.getIndex() + 1, chainData.getPrevHashValue(), block)) {
             throw new ServerException(ResponseCodeEnum.ERROR.getCode(), "区块校验失败，追加区块取消");
         }
@@ -58,12 +58,12 @@ public class BlockChainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public void syncBlock(Integer startIndex, Integer endIndex) {
+    public synchronized void syncBlock(String targetAddress, Integer startIndex, Integer endIndex) {
         logger.info("开始同步区块");
         int count = 0;
         long startTime = System.currentTimeMillis();
         while (startIndex <= endIndex) {
-            List<Block> blockList = networkService.pullBlockFromLeader(startIndex, 10);
+            List<Block> blockList = networkService.pullBlock(targetAddress, startIndex, 10);
             for (Block block : blockList) {
                 insertBlock(block);
                 startIndex += 1;
@@ -93,7 +93,7 @@ public class BlockChainServiceImpl implements BlockChainService {
             for (Map.Entry<Integer, String> entry : orderData.getAvailableOrder().entrySet()) {
                 boolean result = networkService.broadcastAckBlock(entry.getValue());
                 if (!result) {
-                    orderData.addDoubtNode(entry.getKey());
+                    orderData.addDoubtOrder(entry.getKey());
                 }
             }
             // 本节点写入区块
@@ -117,7 +117,7 @@ public class BlockChainServiceImpl implements BlockChainService {
                 count ++;
             } else {
                 // 发送失败，则将该节点信息加入怀疑节点，确认节点是否存活
-                orderData.addDoubtNode(entry.getKey());
+                orderData.addDoubtOrder(entry.getKey());
             }
             total ++;
         }

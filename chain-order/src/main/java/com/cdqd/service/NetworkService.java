@@ -36,11 +36,12 @@ public interface NetworkService {
     /**
      * 从Leader节点拉取区块
      *
+     * @param targetAddress
      * @param blockIndex
      * @param size
      * @return
      */
-    List<Block> pullBlockFromLeader(Integer blockIndex, Integer size);
+    List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size);
 
     /**
      *  向其他Order节点广播区块
@@ -55,4 +56,11 @@ public interface NetworkService {
      * @param address
      */
     boolean broadcastAckBlock(String address);
+
+    /**
+     * 对目标节点发送一个心跳请求
+     * @param address       目标地址
+     * @return  返回目标节点的区块高度
+     */
+    int heartConn(String address);
 }

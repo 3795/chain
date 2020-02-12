@@ -47,8 +47,8 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
-    public List<Block> pullBlockFromLeader(Integer blockIndex, Integer size) {
-        return orderService.pullBlock(orderData.getLeaderAddress(), blockIndex, size);
+    public List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size) {
+        return orderService.pullBlock(targetAddress, blockIndex, size);
     }
 
     @Override
@@ -71,5 +71,10 @@ public class NetworkServiceImpl implements NetworkService {
             logger.error("BroadcastAckBlock failed, Address{}, Message: {}", address, e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public int heartConn(String address) {
+        return 0;
     }
 }
