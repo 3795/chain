@@ -52,6 +52,12 @@ public class HTTPServiceImpl<T> implements HTTPService<T> {
         return handleResponse(response);
     }
 
+    @Override
+    public String postForObject(String url, Object object) {
+        ResponseEntity<ServerResponseVO> response = restTemplate.postForEntity(url, object, ServerResponseVO.class);
+        return handleResponse(response);
+    }
+
     /**
      * Map转换
      * @param paramsMap

@@ -1,5 +1,8 @@
 package com.cdqd.data;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,11 +22,14 @@ public class OrderData {
 
     private String name;        // Order节点名称
 
-    private int id;     // Order节点Id1
+    private int id;     // Order节点Id
 
     private String address; // 该Order节点的网络地址
 
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();        // 其他Order节点的地址
+
+    // 死活不明的节点记录表，map<orderId, count>. OrderId: 节点ID, count: 重试次数
+    private volatile Map<Integer, Integer> doubtNodeMap = new ConcurrentHashMap<>();
 
     public OrderData() {
     }
@@ -97,4 +103,48 @@ public class OrderData {
         orderAddressMap.put(orderId, orderAddress);
     }
 
+    public void addDoubtNode(int orderId) {
+        if (!doubtNodeMap.containsKey(orderId)) {
+            this.doubtNodeMap.put(orderId, 0);
+        }
+    }
+
+    public Map<Integer, Integer> getDoubtNodeMap() {
+        return doubtNodeMap;
+    }
+
+    /**
+     * 获取其他Order节点的网络地址
+     *
+     * @return
+     */
+    public List<String> getOrderAddressList() {
+        List<String> addressList = new ArrayList<>();
+        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
+            if (entry.getValue().equals(this.address)) {
+                continue;
+            }
+            addressList.add(entry.getValue());
+        }
+        return addressList;
+    }
+
+    /**
+     * 返回可用的Order节点Map
+     *
+     * @return
+     */
+    public Map<Integer, String> getAvailableOrder() {
+        Map<Integer, String> map = new HashMap<>();
+        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
+            if (entry.getValue().equals(this.address)) {
+                continue;
+            }
+            if (this.doubtNodeMap.containsKey(entry.getKey())) {
+                continue;       // 跳过生死不明的节点
+            }
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
 }

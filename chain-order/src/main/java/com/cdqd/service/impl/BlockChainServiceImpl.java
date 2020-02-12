@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.cdqd.data.MetaData.chainData;
+import static com.cdqd.data.MetaData.orderData;
 
 /**
  * Description: 节点使用的区块链服务
@@ -70,6 +72,56 @@ public class BlockChainServiceImpl implements BlockChainService {
         }
         long endTime = System.currentTimeMillis();
         logger.info("区块同步结束，耗时: {} ms, 增加区块数量: {}块", endTime - startTime, count);
+    }
+
+    /**
+     *  并发的对其他Order节点进行广播
+     *  其他Order节点收到广播的区块后，先放入临时区域，并响应
+     *  Leader节点收到大于n/2的节点响应后，广播一个写入区块的ack消息，其他Order节点收到ack消息后，将临时区域的区块写入存储系统
+     *  Leader节点将区块写入自己的存储系统
+     *  流程中，如果leader意外死亡，因为消息没有ack，则消息还是会被下一个leader消费掉，不会发生消息丢失
+     *  如果本次广播过程中，出现失败的情况，则放弃后续所有流程，消息未被消费，直接进入到下一次循环
+     * @param messageList
+     * @return
+     */
+    @Override
+    public boolean packAndBroadcast(List<String> messageList) {
+        Block block = Block.generateBlock(chainData, messageList);
+        long startTime = System.currentTimeMillis();
+        if (broadcast(block)) {
+            // 发送确认写入的广播
+            for (Map.Entry<Integer, String> entry : orderData.getAvailableOrder().entrySet()) {
+                boolean result = networkService.broadcastAckBlock(entry.getValue());
+                if (!result) {
+                    orderData.addDoubtNode(entry.getKey());
+                }
+            }
+            // 本节点写入区块
+            insertBlock(block);
+            long endTime = System.currentTimeMillis();
+            logger.info("本次广播耗时：{} ms", endTime - startTime);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean broadcast(Block block) {
+        int count = 0;
+        int total = 0;
+        orderData.getOrderAddressMap().size();
+        // 这个地方比较耗时，后续用并发优化
+        for (Map.Entry<Integer, String> entry : orderData.getAvailableOrder().entrySet()) {
+            boolean result = networkService.broadcastBlock(entry.getValue(), block);
+            if (result) {
+                count ++;
+            } else {
+                // 发送失败，则将该节点信息加入怀疑节点，确认节点是否存活
+                orderData.addDoubtNode(entry.getKey());
+            }
+            total ++;
+        }
+        return count != 0 && 2 * count >= total;
     }
 
 

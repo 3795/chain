@@ -49,9 +49,16 @@ public interface BlockChainService {
     void syncBlock(Integer startIndex, Integer endIndex);
 
     /**
-     * 打包区块，
+     * 打包区块，写入区块，并向其他Order节点广播该区块
      * @param messageList
      * @return
      */
     boolean packAndBroadcast(List<String> messageList);
+
+    /**
+     * 向其他节点广播区块
+     * @param block
+     * @return
+     */
+    boolean broadcast(Block block);
 }

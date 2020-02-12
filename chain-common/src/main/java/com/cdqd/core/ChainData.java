@@ -10,9 +10,12 @@ public class ChainData {
 
     private volatile String prevHashValue;       // 上一个区块的Hash值
 
+    private volatile Block tmpBlock;        // 接收广播后，写入系统前，暂存的区块
+
     public ChainData() {
         this.index = 0;
         this.prevHashValue = "0";
+        this.tmpBlock = null;
     }
 
     public synchronized void set(int index, String prevHashValue) {
@@ -37,4 +40,11 @@ public class ChainData {
         index = index + 1;
     }
 
+    public Block getTmpBlock() {
+        return tmpBlock;
+    }
+
+    public void setTmpBlock(Block tmpBlock) {
+        this.tmpBlock = tmpBlock;
+    }
 }

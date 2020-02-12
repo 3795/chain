@@ -50,4 +50,26 @@ public class NetworkServiceImpl implements NetworkService {
     public List<Block> pullBlockFromLeader(Integer blockIndex, Integer size) {
         return orderService.pullBlock(orderData.getLeaderAddress(), blockIndex, size);
     }
+
+    @Override
+    public boolean broadcastBlock(String address, Block block) {
+        try {
+            orderService.broadcastBlock(address, block);
+            return true;
+        } catch (Exception e) {
+            logger.error("BroadcastBlock failed, Address: {}, Message: {}", address, e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean broadcastAckBlock(String address) {
+        try {
+            orderService.broadcastAckBlock(address);
+            return true;
+        } catch (Exception e) {
+            logger.error("BroadcastAckBlock failed, Address{}, Message: {}", address, e.getMessage());
+            return false;
+        }
+    }
 }

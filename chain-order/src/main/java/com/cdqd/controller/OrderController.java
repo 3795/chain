@@ -3,6 +3,7 @@ package com.cdqd.controller;
 import com.cdqd.component.KafkaProducer;
 import com.cdqd.core.Block;
 import com.cdqd.data.MetaData;
+import com.cdqd.dto.BlockDTO;
 import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.vo.ServerResponseVO;
@@ -84,6 +85,7 @@ public class OrderController {
     }
 
     /**
+     * 临时接口，方便测试功能，后续删除
      * 添加内容，并生成区块
      *
      * @param contents
@@ -93,7 +95,7 @@ public class OrderController {
     public ServerResponseVO addBlock(@RequestParam("contents") List<String> contents) {
         Block block = Block.generateBlock(chainData, contents);
         blockChainService.insertBlock(block);
-        return ServerResponseVO.success("添加成功");
+        return ServerResponseVO.success("添加区块成功");
     }
 
     /**
@@ -105,6 +107,47 @@ public class OrderController {
     @PostMapping("/data")
     public ServerResponseVO kafka(@RequestParam("data") String data) {
         kafkaProducer.send(data);
-        return ServerResponseVO.success("添加成功");
+        return ServerResponseVO.success("提交内容成功");
     }
+
+    /**
+     * 接收网络中广播出来的区块
+     *
+     * @param blockDTO
+     * @return
+     */
+    @PostMapping("/broad-block")
+    public ServerResponseVO broadBlock(@RequestBody BlockDTO blockDTO) {
+        Block block = Block.blockDTO2Block(blockDTO);
+        chainData.setTmpBlock(block);
+        logger.info("收到一个区块, Index: {}", block.getIndex());
+        return ServerResponseVO.success("区块接收成功");
+    }
+
+    /**
+     * 接收Leader发出的Ack信息
+     * @return
+     */
+    @PostMapping("/ack-block")
+    public ServerResponseVO ackBlock() {
+        Block block = chainData.getTmpBlock();
+        if (block != null) {
+            try {
+                /**
+                 * 可能情况：
+                 * 1. LeaderA广播了一个区块，Order节点收到了区块，但并未写入，放入tmpBlock中
+                 * 2. LeaderA广播了一个ack消息，因为网络阻塞或其他原因，Order节点并未收到该ack消息，未将tmpBlock写入系统
+                 * 3. LeaderA广播了一个新的区块，Order节点收到了该区块，并覆盖了放在tmpBlock中的上一个未写入区块
+                 * 4. Order节点收到了ack消息，写入系统时，区块校验失败，此时应以Leader节点为准，抛弃广播收到的区块，直接同步区块
+                 */
+                blockChainService.insertBlock(block);
+            } catch (Exception e) {
+                // 从Leader处同步区块
+                e.printStackTrace();
+            }
+            return ServerResponseVO.success("写入区块成功");
+        }
+        return ServerResponseVO.success("OK");
+    }
+
 }

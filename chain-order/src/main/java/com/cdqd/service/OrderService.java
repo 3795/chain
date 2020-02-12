@@ -45,4 +45,17 @@ public interface OrderService {
      * @return
      */
     List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size);
+
+    /**
+     * 向其他节点广播区块
+     * @param address
+     * @param block
+     */
+    void broadcastBlock(String address, Block block);
+
+    /**
+     * 向其他节点广播写入区块消息
+     * @param address
+     */
+    void broadcastAckBlock(String address);
 }

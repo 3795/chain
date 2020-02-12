@@ -41,4 +41,18 @@ public interface NetworkService {
      * @return
      */
     List<Block> pullBlockFromLeader(Integer blockIndex, Integer size);
+
+    /**
+     *  向其他Order节点广播区块
+     * @param address
+     * @param block
+     * @return
+     */
+    boolean broadcastBlock(String address, Block block);
+
+    /**
+     * 向其他Order节点广播区块写入的信息
+     * @param address
+     */
+    boolean broadcastAckBlock(String address);
 }

@@ -61,4 +61,14 @@ public class OrderServiceImpl implements OrderService {
         return blockList;
     }
 
+    @Override
+    public void broadcastBlock(String address, Block block) {
+        httpService.postForObject(HTTP_PREFIX + address + "/order/broad-block", block);
+    }
+
+    @Override
+    public void broadcastAckBlock(String address) {
+        httpService.postForObject(HTTP_PREFIX + address + "/order/ack-block", null);
+    }
+
 }
