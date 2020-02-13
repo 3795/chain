@@ -34,7 +34,7 @@ public interface OrderService {
      * @param leaderAddress
      * @return
      */
-    int getLeaderIndex(String leaderAddress);
+    int getBlockIndex(String leaderAddress);
 
     /**
      * 从其他节点拉取区块
@@ -58,4 +58,5 @@ public interface OrderService {
      * @param address
      */
     void broadcastAckBlock(String address);
+
 }

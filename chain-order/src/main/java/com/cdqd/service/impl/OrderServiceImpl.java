@@ -40,8 +40,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public int getLeaderIndex(String leaderAddress) {
-        String responseStr = httpService.get(HTTP_PREFIX + leaderAddress + "/order/block-index");
+    public int getBlockIndex(String targetAddress) {
+        String responseStr = httpService.get(HTTP_PREFIX + targetAddress + "/order/block-index");
         return Integer.parseInt(responseStr);
     }
 

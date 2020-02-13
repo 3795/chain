@@ -17,13 +17,13 @@ import static com.cdqd.data.MetaData.chainData;
 import static com.cdqd.data.MetaData.orderData;
 
 /**
- * Description: 加载Order节点数据
+ * Description: 初始化Order节点数据
  * Created At 2020/2/7
  */
 @Component
-public class InitSystem {
+public class InitOrderNode {
 
-    private static Logger logger = LoggerFactory.getLogger(InitSystem.class);
+    private static Logger logger = LoggerFactory.getLogger(InitOrderNode.class);
 
     @Autowired
     private ServerInfo serverInfo;
@@ -51,7 +51,7 @@ public class InitSystem {
         }
 
         // 4. 同步区块或者生成初始区块
-        if (orderData.isLeader()) {
+        if (orderData.isSeed()) {
             initBlockChainSystem();
         } else {
             if (!syncBlockChain()) {
@@ -59,7 +59,6 @@ public class InitSystem {
             }
         }
 
-        logger.info("接入现有节点网络成功");
         logger.info("节点启动成功，Id:{}, Name:{}, IP:{}, Port:{}", orderData.getId(), orderData.getName(),
                 orderData.getIp(), orderData.getPort());
     }
@@ -68,12 +67,12 @@ public class InitSystem {
      * 初始化节点数据
      */
     private void initOrderData() {
-        if (orderConfig.isLeader()) {
+        if (orderConfig.isSeed()) {
             orderData = new OrderData(serverInfo.getHost(), serverInfo.getServerPort(),
-                    orderConfig.isLeader(), orderConfig.getName(), orderConfig.getId());
+                    orderConfig.isSeed(), orderConfig.getName(), orderConfig.getId());
         } else {
             orderData = new OrderData(serverInfo.getHost(), serverInfo.getServerPort(),
-                    orderConfig.isLeader(), orderConfig.getName(), orderConfig.getId(), orderConfig.getLeaderAddress());
+                    orderConfig.isSeed(), orderConfig.getName(), orderConfig.getId(), orderConfig.getSeedAddress());
         }
         chainData = new ChainData();
         logger.info("初始化节点数据成功");
@@ -93,24 +92,22 @@ public class InitSystem {
     private boolean accessNodeNetwork() {
         orderData.addOrderAddress(orderData.getId(), orderData.getAddress());        // 将自身的地址加入map
         // 3. 对于非Leader节点，需要从Leader节点处获取所有的Order节点列表，并向其他节点广播自身的网络地址
-        if (!orderData.isLeader()) {
+        if (!orderData.isSeed()) {
             try {
-                Map<String, String> orderAddressMap = networkService.fetchAddressFromLeader();
+                Map<String, String> orderAddressMap = networkService.fetchAddressFromSeed();
                 for (Map.Entry<String, String> entry : orderAddressMap.entrySet()) {
                     if (entry.getValue().equals(orderData.getAddress())) {
                         continue;
                     }
                     orderData.addOrderAddress(Integer.parseInt(entry.getKey()), entry.getValue());
-                    boolean success = networkService.register(entry.getValue());
-                    if (!success) {
-                        // TODO 将该目标地址加入CheckAliveMap中，后续判断是否存活
-                    }
+                    networkService.register(entry.getValue());
                 }
             } catch (Exception e) {
-                logger.error("接入现有节点网络失败，Message: {}，节点启动失败!", e.getMessage());
+                logger.error("接入现有节点网络失败，节点启动失败!");
                 return false;
             }
         }
+        logger.info("接入现有节点网络成功");
         return true;
     }
 
@@ -120,21 +117,14 @@ public class InitSystem {
      * @return
      */
     private boolean syncBlockChain() {
-        // 查询Leader节点的区块高度
-        int leaderIndex = networkService.getLeaderIndex();
-        int initIndex = 0;
-        if (blockChainService.chainExist()) {
-            Block block = blockChainService.queryPrevBlock();  // 查询节点自身区块的高度
-            chainData.set(block.getIndex(), block.getHashValue());
-            initIndex = block.getIndex();
-            if (leaderIndex <= initIndex) {
-                return true;
-            }
-        }
         try {
-            blockChainService.syncBlock(orderData.getLeaderAddress(), initIndex + 1, leaderIndex);
+            if (blockChainService.chainExist()) {
+                Block block = blockChainService.queryPrevBlock();  // 查询节点自身区块的高度
+                chainData.set(block.getIndex(), block.getHashValue());
+            }
+            blockChainService.syncBlock(orderData.getSeedAddress());
         } catch (Exception e) {
-            logger.warn("同步区块失败");
+            logger.warn("区块同步失败");
             return false;
         }
         return true;

@@ -20,18 +20,18 @@ public interface NetworkService {
     boolean register(String targetAddress);
 
     /**
-     * 拉取其他Order节点网络地址
+     * 从种子节点拉取其他Order节点网络地址
      *
      * @return
      */
-    Map<String, String> fetchAddressFromLeader();
+    Map<String, String> fetchAddressFromSeed();
 
     /**
-     * 查询Leader节点的区块高度
+     * 查询目标节点的区块高度
      *
      * @return
      */
-    int getLeaderIndex();
+    int getBlockIndex(String targetAddress);
 
     /**
      * 从Leader节点拉取区块

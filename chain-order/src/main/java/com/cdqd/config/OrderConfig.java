@@ -11,20 +11,20 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "order")
 public class OrderConfig {
 
-    private boolean leader;
+    private boolean seed;
 
     private String name;
 
     private int id;
 
-    private String leaderAddress;
+    private String seedAddress;
 
-    public boolean isLeader() {
-        return leader;
+    public boolean isSeed() {
+        return seed;
     }
 
-    public void setLeader(boolean leader) {
-        this.leader = leader;
+    public void setSeed(boolean seed) {
+        this.seed = seed;
     }
 
     public String getName() {
@@ -43,11 +43,11 @@ public class OrderConfig {
         this.id = id;
     }
 
-    public String getLeaderAddress() {
-        return leaderAddress;
+    public String getSeedAddress() {
+        return seedAddress;
     }
 
-    public void setLeaderAddress(String leaderAddress) {
-        this.leaderAddress = leaderAddress;
+    public void setSeedAddress(String seedAddress) {
+        this.seedAddress = seedAddress;
     }
 }

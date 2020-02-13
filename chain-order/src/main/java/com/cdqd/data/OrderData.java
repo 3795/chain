@@ -1,9 +1,6 @@
 package com.cdqd.data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -16,9 +13,9 @@ public class OrderData {
 
     private Integer port;   // 本节点的端口
 
-    private String leaderAddress;        // leader节点的IP地址
+    private String seedAddress;        // leader节点的IP地址
 
-    private volatile boolean leader;     // 该Order节点是否是Leader节点
+    private boolean seed;     // 该Order节点是否是Leader节点
 
     private String name;        // Order节点名称
 
@@ -33,33 +30,25 @@ public class OrderData {
     private volatile Map<Integer, Integer> doubtOrderMap = new ConcurrentHashMap<>();
 
     // 记录每个Order节点的区块高度，map<orderId, blockIndex>. OrderId: 节点ID, blockIndex: 该节点内部的区块高度
-    private volatile Map<Integer, Integer> orderBlockIndex = new ConcurrentHashMap<>();
+    private volatile Map<Integer, Integer> orderBlockIndexMap = new TreeMap<>();
 
-    public OrderData(String ip, Integer port, boolean leader, String name, int id) {
+    public OrderData(String ip, Integer port, boolean seed, String name, int id) {
         this.ip = ip;
         this.port = port;
-        this.leader = leader;
+        this.seed = seed;
         this.name = name;
         this.id = id;
         this.address = ip + ":" + port;
     }
 
-    public OrderData(String ip, Integer port, boolean leader, String name, int id, String leaderAddress) {
+    public OrderData(String ip, Integer port, boolean seed, String name, int id, String seedAddress) {
         this.ip = ip;
         this.port = port;
-        this.leaderAddress = leaderAddress;
-        this.leader = leader;
+        this.seedAddress = seedAddress;
+        this.seed = seed;
         this.name = name;
         this.id = id;
         this.address = ip + ":" + port;
-    }
-
-    public void setLeader(boolean leader) {
-        this.leader = leader;
-    }
-
-    public void setLeaderAddress(String leaderAddress) {
-        this.leaderAddress = leaderAddress;
     }
 
     public String getIp() {
@@ -70,12 +59,12 @@ public class OrderData {
         return port;
     }
 
-    public String getLeaderAddress() {
-        return leaderAddress;
+    public String getSeedAddress() {
+        return seedAddress;
     }
 
-    public boolean isLeader() {
-        return leader;
+    public boolean isSeed() {
+        return seed;
     }
 
     public String getName() {
@@ -108,11 +97,23 @@ public class OrderData {
     /**
      * 添加疑似节点
      *
-     * @param orderId
+     * @param orderId       节点ID
      */
     public void addDoubtOrder(int orderId) {
         if (!doubtOrderMap.containsKey(orderId)) {
             this.doubtOrderMap.put(orderId, 0);
+        }
+    }
+
+    /**
+     * 添加疑似节点
+     * @param address       节点地址
+     */
+    public void addDoubtOrder(String address) {
+        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
+            if (entry.getValue().equals(address)) {
+                addDoubtOrder(entry.getKey());
+            }
         }
     }
 
@@ -123,31 +124,41 @@ public class OrderData {
      * @param blockIndex
      */
     public void putOrderBlockIndex(int orderId, int blockIndex) {
-        orderBlockIndex.put(orderId, blockIndex);
+        orderBlockIndexMap.put(orderId, blockIndex);
     }
 
     public Map<Integer, Integer> getDoubtOrderMap() {
         return doubtOrderMap;
     }
 
-    public Map<Integer, Integer> getOrderBlockIndex() {
-        return orderBlockIndex;
-    }
-
     /**
-     * 获取其他Order节点的网络地址
+     * 查找区块高度最高的节点网络地址
      *
      * @return
      */
-    public List<String> getOrderAddressList() {
-        List<String> addressList = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
-            if (entry.getValue().equals(this.address)) {
+    public String getHighestOrder() {
+        List<Map.Entry<Integer, Integer>> list = new ArrayList<>(orderBlockIndexMap.entrySet());
+        // 按照blockIndex降序排列
+        list.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
+        for (Map.Entry<Integer, Integer> entry : list) {
+            Integer orderId = entry.getKey();
+            // 防止出现找出的节点生死不明，浪费时间，跳过，找可用的节点
+            if (this.doubtOrderMap.containsKey(orderId)) {
                 continue;
             }
-            addressList.add(entry.getValue());
+            return this.orderAddressMap.get(orderId);
         }
-        return addressList;
+        return this.seedAddress;
+    }
+
+    /**
+     * 删除节点
+     * @param orderId
+     */
+    public void removeOrder(Integer orderId) {
+        this.orderAddressMap.remove(orderId);      // 删除地址信息
+        this.doubtOrderMap.remove(orderId);        // 删除重试次数信息
+        this.orderBlockIndexMap.remove(orderId);   // 删除节点区块高度信息
     }
 
     /**

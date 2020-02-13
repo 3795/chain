@@ -6,6 +6,7 @@ import com.cdqd.data.MetaData;
 import com.cdqd.dto.BlockDTO;
 import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.service.BlockChainService;
+import com.cdqd.util.BlockUtil;
 import com.cdqd.vo.ServerResponseVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +122,16 @@ public class OrderController {
         Block block = Block.blockDTO2Block(blockDTO);
         chainData.setTmpBlock(block);
         logger.info("收到一个区块, Index: {}", block.getIndex());
-        return ServerResponseVO.success("区块接收成功");
+        if (BlockUtil.verify(chainData.getIndex() + 1, chainData.getPrevHashValue(), block)) {
+            return ServerResponseVO.success("接收区块成功");
+        } else {
+            String address = orderData.getHighestOrder();
+            logger.info("将从节点 {} 处同步区块", address);
+            // 这个地方，同步区块时是可能会抛出异常的，但是在Controller层，就不再处理了
+            // 此处不再处理，对整个流程没有什么影响，下一次收到Ack消息时，再从其他节点同步区块
+            blockChainService.syncBlock(address);
+            return ServerResponseVO.error("忽略本次收到的区块，BlockIndex: " + block.getIndex());
+        }
     }
 
     /**
@@ -142,21 +152,11 @@ public class OrderController {
                  */
                 blockChainService.insertBlock(block);
             } catch (Exception e) {
-                // 从Leader处同步区块
-                e.printStackTrace();
+                logger.error("Ack区块失败，Message: {}", e.getMessage());
             }
-            return ServerResponseVO.success("写入区块成功");
+            return ServerResponseVO.success("OK");
         }
         return ServerResponseVO.success("OK");
-    }
-
-    /**
-     * 响应其他节点的心跳呼叫，返回本节点内容的区块高度
-     * @return
-     */
-    @GetMapping("/heart")
-    public ServerResponseVO heart() {
-        return ServerResponseVO.success(chainData.getIndex());
     }
 
 }

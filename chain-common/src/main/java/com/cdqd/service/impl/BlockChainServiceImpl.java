@@ -27,9 +27,9 @@ import java.util.List;
  * Created At 2020/2/9
  */
 @Service
-public class BlockServiceImpl implements BlockService {
+public class BlockChainServiceImpl implements BlockService {
 
-    private final static Logger logger = LoggerFactory.getLogger(BlockServiceImpl.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockChainServiceImpl.class);
 
     @Autowired
     private BlockModelMapper blockMapper;
@@ -54,7 +54,7 @@ public class BlockServiceImpl implements BlockService {
             BlockContentModel contentModel = new BlockContentModel(block.getIndex(), content.getContent());
             insert(contentModel);
         }
-        logger.info("追加区块成功, 区块索引{}", block.getIndex());
+        logger.info("追加区块成功, 区块索引: {}", block.getIndex());
     }
 
     @Override
@@ -111,7 +111,7 @@ public class BlockServiceImpl implements BlockService {
     private void insert(BlockModel blockModel) {
         int result = blockMapper.insertSelective(blockModel);
         if (result != 1) {
-            throw new ServerException("Insert into block failed", ResponseCodeEnum.INSERT_FAILED);
+            throw new ServerException(ResponseCodeEnum.INSERT_FAILED, "Insert into block failed");
         }
     }
 
@@ -123,7 +123,7 @@ public class BlockServiceImpl implements BlockService {
     private void insert(BlockContentModel contentModel) {
         int result = contentMapper.insertSelective(contentModel);
         if (result != 1) {
-            throw new ServerException("Insert into block_content failed", ResponseCodeEnum.INSERT_FAILED);
+            throw new ServerException(ResponseCodeEnum.INSERT_FAILED, "Insert into block_content failed");
         }
     }
 }

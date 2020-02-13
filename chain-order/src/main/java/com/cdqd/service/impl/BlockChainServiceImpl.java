@@ -41,7 +41,7 @@ public class BlockChainServiceImpl implements BlockChainService {
     @Override
     public synchronized void insertBlock(Block block) {
         if (!BlockUtil.verify(chainData.getIndex() + 1, chainData.getPrevHashValue(), block)) {
-            throw new ServerException(ResponseCodeEnum.ERROR.getCode(), "区块校验失败，追加区块取消");
+            throw new ServerException(ResponseCodeEnum.INSERT_BLOCK_FAILED);
         }
         blockService.insertBlock(block);
         chainData.update(block.getHashValue());
@@ -58,11 +58,18 @@ public class BlockChainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public synchronized void syncBlock(String targetAddress, Integer startIndex, Integer endIndex) {
+    public synchronized void syncBlock(String targetAddress) {
+        // 查询目标节点的区块高度
+        int remoteBlockIndex = networkService.getBlockIndex(targetAddress);
+        int localBlockIndex = chainData.getIndex();
+        if (remoteBlockIndex <= localBlockIndex) {
+            return;
+        }
         logger.info("开始同步区块");
         int count = 0;
         long startTime = System.currentTimeMillis();
-        while (startIndex <= endIndex) {
+        int startIndex = localBlockIndex + 1;
+        while (startIndex <= remoteBlockIndex) {
             List<Block> blockList = networkService.pullBlock(targetAddress, startIndex, 10);
             for (Block block : blockList) {
                 insertBlock(block);
@@ -109,7 +116,6 @@ public class BlockChainServiceImpl implements BlockChainService {
     public boolean broadcast(Block block) {
         int count = 0;
         int total = 0;
-        orderData.getOrderAddressMap().size();
         // 这个地方比较耗时，后续用并发优化
         for (Map.Entry<Integer, String> entry : orderData.getAvailableOrder().entrySet()) {
             boolean result = networkService.broadcastBlock(entry.getValue(), block);

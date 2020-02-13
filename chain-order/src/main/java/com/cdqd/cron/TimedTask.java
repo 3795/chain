@@ -31,7 +31,7 @@ public class TimedTask {
     private BlockChainService blockChainService;
 
     /**
-     * 与其他节点的心跳连
+     * 与其他节点的心跳连接
      * 每两分钟执行一次
      */
     @Scheduled(cron = "0 0/2 * * * *")
@@ -42,11 +42,15 @@ public class TimedTask {
                 orderData.addDoubtOrder(entry.getKey());
             } else {
                 orderData.putOrderBlockIndex(entry.getKey(), blockIndex);
-                if ((blockIndex - chainData.getIndex()) > 2) {
-                    // 区块高度差大于2，则说明广播过程或接收过程出现了问题
+                if ((blockIndex - chainData.getIndex()) > 1) {
+                    // 区块高度差大于1，则说明广播过程或接收过程出现了问题
                     // 直接以该节点为基准，进行区块同步
                     logger.warn("本地区块出现滞后性，开始以节点 {} 为准进行同步，本地高度: {}, 目标高度: {}");
-                    blockChainService.syncBlock(entry.getValue(), chainData.getIndex() + 1, blockIndex);
+                    try {
+                        blockChainService.syncBlock(entry.getValue());
+                    } catch (Exception e) {
+                        logger.error("本次区块同步失败");
+                    }
                 }
             }
         }
@@ -66,8 +70,8 @@ public class TimedTask {
                 int count = entry.getValue() + 1;
                 if (count > 2) {
                     // 重试了3次仍失败，则判定该节点死亡，移除该节点信息
-                    orderData.getOrderAddressMap().remove(entry.getKey());
-                    orderData.getDoubtOrderMap().remove(entry.getKey());
+                    orderData.removeOrder(entry.getKey());
+                    logger.info("已移除无响应节点，OrderId: {}, Address: {}", entry.getKey(), address);
                 } else {
                     orderData.getDoubtOrderMap().put(entry.getKey(), count);
                 }

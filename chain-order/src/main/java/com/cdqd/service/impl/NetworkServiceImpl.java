@@ -1,6 +1,8 @@
 package com.cdqd.service.impl;
 
 import com.cdqd.core.Block;
+import com.cdqd.enums.ResponseCodeEnum;
+import com.cdqd.exception.ServerException;
 import com.cdqd.service.NetworkService;
 import com.cdqd.service.OrderService;
 import org.slf4j.Logger;
@@ -30,25 +32,41 @@ public class NetworkServiceImpl implements NetworkService {
         try {
             orderService.register(targetAddress, orderData.getId(), orderData.getAddress());
         } catch (Exception e) {
-            logger.error("向节点注册{}失败, Message: {}", targetAddress, e.getMessage());
+            logger.error("向节点注册 {} 失败, Message: {}", targetAddress, e.getMessage());
+            orderData.addDoubtOrder(targetAddress);
             return false;
         }
         return true;
     }
 
     @Override
-    public Map<String, String> fetchAddressFromLeader() {
-        return orderService.fetchAddress(orderData.getLeaderAddress());
+    public Map<String, String> fetchAddressFromSeed() {
+        try {
+            return orderService.fetchAddress(orderData.getSeedAddress());
+        } catch (Exception e) {
+            throw new ServerException(String.format("从种子节点 %s 拉取其他Order节点网络地址失败, Message: %s",
+                    orderData.getSeedAddress(), e.getMessage()));
+        }
     }
 
     @Override
-    public int getLeaderIndex() {
-        return orderService.getLeaderIndex(orderData.getLeaderAddress());
+    public int getBlockIndex(String targetAddress) {
+        try {
+            return orderService.getBlockIndex(targetAddress);
+        } catch (Exception e) {
+            orderData.addDoubtOrder(targetAddress);
+            throw new ServerException("获取节点 " + targetAddress + " 区块高度失败");
+        }
     }
 
     @Override
     public List<Block> pullBlock(String targetAddress, Integer blockIndex, Integer size) {
-        return orderService.pullBlock(targetAddress, blockIndex, size);
+        try {
+            return orderService.pullBlock(targetAddress, blockIndex, size);
+        } catch (Exception e) {
+            orderData.addDoubtOrder(targetAddress);
+            throw new ServerException("从节点 " + targetAddress + " {} 拉取区块失败");
+        }
     }
 
     @Override
@@ -57,7 +75,10 @@ public class NetworkServiceImpl implements NetworkService {
             orderService.broadcastBlock(address, block);
             return true;
         } catch (Exception e) {
-            logger.error("BroadcastBlock failed, Address: {}, Message: {}", address, e.getMessage());
+            if (!ResponseCodeEnum.IGNORE_BROAD_BLOCK.getMessage().equals(e.getMessage())) {
+                orderData.addDoubtOrder(address);
+            }
+            logger.warn("BroadcastBlock failed, Address: {}, Message: {}", address, e.getMessage());
             return false;
         }
     }
@@ -68,13 +89,19 @@ public class NetworkServiceImpl implements NetworkService {
             orderService.broadcastAckBlock(address);
             return true;
         } catch (Exception e) {
-            logger.error("BroadcastAckBlock failed, Address{}, Message: {}", address, e.getMessage());
+            logger.warn("BroadcastAckBlock failed, Address{}, Message: {}", address, e.getMessage());
+            orderData.addDoubtOrder(address);
             return false;
         }
     }
 
     @Override
     public int heartConn(String address) {
-        return 0;
+        try {
+            return orderService.getBlockIndex(address);
+        } catch (Exception e) {
+            logger.warn("Heart connection no response, address: {}", address);
+            return -1;
+        }
     }
 }

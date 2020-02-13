@@ -27,9 +27,16 @@ public class ServerException extends RuntimeException {
      * @param exDetail      异常的详细情况
      * @param responseCodeEnum      异常枚举
      */
-    public ServerException(String exDetail, ResponseCodeEnum responseCodeEnum) {
+    public ServerException(ResponseCodeEnum responseCodeEnum, String exDetail) {
         super(responseCodeEnum.getMessage());
         this.code = responseCodeEnum.getCode();
+        // 打印错误日志
+        logger.error(exDetail);
+    }
+
+    public ServerException(String exDetail) {
+        super(exDetail);
+        this.code = ResponseCodeEnum.ERROR.getCode();
         // 打印错误日志
         logger.error(exDetail);
     }
