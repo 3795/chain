@@ -53,7 +53,6 @@ public class NetworkServiceImpl implements NetworkService {
             return orderService.getBlockIndex(address);
         } catch (Exception e) {
             peerData.addDoubtOrder(address);
-            logger.warn("Message: {}", e.getMessage());
             throw new ServerException("获取节点 " + address + " 区块高度失败");
         }
     }

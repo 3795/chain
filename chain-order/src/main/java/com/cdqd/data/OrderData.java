@@ -162,9 +162,9 @@ public class OrderData {
      *
      * @param orderId
      */
-    public void removeOrder(Integer orderId) {
+    public void removeDiedOrder(Integer orderId) {
         if (this.doubtOrderMap.containsKey(orderId) &&
-                this.doubtOrderMap.get(orderId) > 2) {
+                this.doubtOrderMap.get(orderId) == 2) {
             String info = this.orderAddressMap.get(orderId);
             this.orderAddressMap.remove(orderId);      // 删除地址信息
             this.doubtOrderMap.remove(orderId);        // 删除重试次数信息

@@ -107,7 +107,7 @@ public class PeerData {
     public void removeDiedOrder(Integer orderId) {
         // 判定一次，防止误删
         if (this.doubtOrderMap.containsKey(orderId) &&
-                this.doubtOrderMap.get(orderId) > 2) {
+                this.doubtOrderMap.get(orderId) == 2) {
             String info = this.orderAddressMap.get(orderId);
             this.orderAddressMap.remove(orderId);
             this.doubtOrderMap.remove(orderId);

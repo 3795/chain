@@ -42,7 +42,7 @@ public class CronTask {
      * 检查存储的Order节点的活性
      * 每2分钟执行一次
      */
-    @Scheduled(cron = "0 0/2 * * * *")
+    @Scheduled(cron = "0/30 * * * * *")
     public void checkActivity() {
         Map<Integer, Integer> map = peerData.getDoubtOrderMap();
         for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
