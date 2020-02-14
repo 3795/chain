@@ -68,10 +68,10 @@ public class InitOrderNode {
      */
     private void initOrderData() {
         if (orderConfig.isSeed()) {
-            orderData = new OrderData(serverInfo.getHost(), serverInfo.getServerPort(),
+            orderData = new OrderData(serverInfo.getHost(), serverInfo.getPort(),
                     orderConfig.isSeed(), orderConfig.getName(), orderConfig.getId());
         } else {
-            orderData = new OrderData(serverInfo.getHost(), serverInfo.getServerPort(),
+            orderData = new OrderData(serverInfo.getHost(), serverInfo.getPort(),
                     orderConfig.isSeed(), orderConfig.getName(), orderConfig.getId(), orderConfig.getSeedAddress());
         }
         chainData = new ChainData();

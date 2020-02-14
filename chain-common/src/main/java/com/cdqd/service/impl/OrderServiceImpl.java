@@ -71,4 +71,12 @@ public class OrderServiceImpl implements OrderService {
         httpService.postForObject(HTTP_PREFIX + address + "/order/ack-block", null);
     }
 
+    @Override
+    public void commitData(String address, Integer peerId, String data) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("peerId", peerId);
+        params.put("data", data);
+        httpService.post(HTTP_PREFIX + address + "/order/commit-data", params);
+    }
+
 }

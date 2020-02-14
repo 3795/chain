@@ -105,8 +105,9 @@ public class OrderController {
      * @param data
      * @return
      */
-    @PostMapping("/data")
-    public ServerResponseVO kafka(@RequestParam("data") String data) {
+    @PostMapping("/commit-data")
+    public ServerResponseVO kafka(@RequestParam("peerId") Integer peerId,
+                                  @RequestParam("data") String data) {
         kafkaProducer.send(data);
         return ServerResponseVO.success("提交内容成功");
     }

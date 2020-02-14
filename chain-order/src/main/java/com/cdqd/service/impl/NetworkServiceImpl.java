@@ -44,6 +44,7 @@ public class NetworkServiceImpl implements NetworkService {
         try {
             return orderService.fetchAddress(orderData.getSeedAddress());
         } catch (Exception e) {
+            logger.warn("Message: {}", e.getMessage());
             throw new ServerException(String.format("从种子节点 %s 拉取其他Order节点网络地址失败, Message: %s",
                     orderData.getSeedAddress(), e.getMessage()));
         }
@@ -54,6 +55,7 @@ public class NetworkServiceImpl implements NetworkService {
         try {
             return orderService.getBlockIndex(targetAddress);
         } catch (Exception e) {
+            logger.warn("Message: {}", e.getMessage());
             orderData.addDoubtOrder(targetAddress);
             throw new ServerException("获取节点 " + targetAddress + " 区块高度失败");
         }
@@ -65,6 +67,7 @@ public class NetworkServiceImpl implements NetworkService {
             return orderService.pullBlock(targetAddress, blockIndex, size);
         } catch (Exception e) {
             orderData.addDoubtOrder(targetAddress);
+            logger.warn("Message: {}", e.getMessage());
             throw new ServerException("从节点 " + targetAddress + " {} 拉取区块失败");
         }
     }
@@ -100,7 +103,7 @@ public class NetworkServiceImpl implements NetworkService {
         try {
             return orderService.getBlockIndex(address);
         } catch (Exception e) {
-            logger.warn("Heart connection no response, address: {}", address);
+            logger.warn("Heart connection no response, address: {}, Message: {}", address, e.getMessage());
             return -1;
         }
     }

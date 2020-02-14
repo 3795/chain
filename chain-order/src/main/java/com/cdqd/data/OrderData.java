@@ -1,5 +1,8 @@
 package com.cdqd.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -8,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created At 2020/2/7
  */
 public class OrderData {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderData.class);
 
     private String ip;      // 本节点的IP
 
@@ -97,7 +102,7 @@ public class OrderData {
     /**
      * 添加疑似节点
      *
-     * @param orderId       节点ID
+     * @param orderId 节点ID
      */
     public void addDoubtOrder(int orderId) {
         if (!doubtOrderMap.containsKey(orderId)) {
@@ -107,7 +112,8 @@ public class OrderData {
 
     /**
      * 添加疑似节点
-     * @param address       节点地址
+     *
+     * @param address 节点地址
      */
     public void addDoubtOrder(String address) {
         for (Map.Entry<Integer, String> entry : orderAddressMap.entrySet()) {
@@ -153,12 +159,18 @@ public class OrderData {
 
     /**
      * 删除节点
+     *
      * @param orderId
      */
     public void removeOrder(Integer orderId) {
-        this.orderAddressMap.remove(orderId);      // 删除地址信息
-        this.doubtOrderMap.remove(orderId);        // 删除重试次数信息
-        this.orderBlockIndexMap.remove(orderId);   // 删除节点区块高度信息
+        if (this.doubtOrderMap.containsKey(orderId) &&
+                this.doubtOrderMap.get(orderId) > 2) {
+            String info = this.orderAddressMap.get(orderId);
+            this.orderAddressMap.remove(orderId);      // 删除地址信息
+            this.doubtOrderMap.remove(orderId);        // 删除重试次数信息
+            this.orderBlockIndexMap.remove(orderId);   // 删除节点区块高度信息
+            logger.info("已移除无响应节点，OrderId: {}, Address: {}", orderId, info);
+        }
     }
 
     /**

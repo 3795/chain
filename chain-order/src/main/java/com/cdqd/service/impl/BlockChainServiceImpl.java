@@ -25,7 +25,7 @@ import static com.cdqd.data.MetaData.orderData;
 @Service
 public class BlockChainServiceImpl implements BlockChainService {
 
-    private final static Logger logger = LoggerFactory.getLogger(BlockChainServiceImpl.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockServiceImpl.class);
 
     @Autowired
     private BlockService blockService;

@@ -71,7 +71,6 @@ public class TimedTask {
                 if (count > 2) {
                     // 重试了3次仍失败，则判定该节点死亡，移除该节点信息
                     orderData.removeOrder(entry.getKey());
-                    logger.info("已移除无响应节点，OrderId: {}, Address: {}", entry.getKey(), address);
                 } else {
                     orderData.getDoubtOrderMap().put(entry.getKey(), count);
                 }

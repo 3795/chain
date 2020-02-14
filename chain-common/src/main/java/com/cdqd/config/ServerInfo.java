@@ -32,17 +32,8 @@ public class ServerInfo {
      * 获取服务的端口
      * @return
      */
-    public int getServerPort() {
+    public int getPort() {
         return serverPort;
     }
-
-    /**
-     * 获取服务的网络地址
-     * @return
-     */
-    public String getUrl() {
-        return "http://" + getHost() + ":" + getServerPort();
-    }
-
 
 }

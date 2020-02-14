@@ -22,7 +22,7 @@ public interface BlockChainService {
     /**
      * 从Order节点处同步区块
      */
-    void syncBlock();
+    boolean syncBlock();
 
     /**
      * 向本地存储系统中写入区块链

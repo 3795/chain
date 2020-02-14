@@ -84,7 +84,8 @@ public class HTTPServiceImpl<T> implements HTTPService<T> {
             if (serverResponsevo.getCode() == ResponseCodeEnum.SUCCESS.getCode()) {
                 return JSON.toJSONString(serverResponsevo.getData());
             } else {
-                throw new ServerException(ResponseCodeEnum.ERROR.getCode(), serverResponsevo.getMessage());
+                // 重组该异常，并返回
+                throw new ServerException(serverResponsevo.getCode(), serverResponsevo.getMessage());
             }
         }
     }

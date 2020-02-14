@@ -1,7 +1,6 @@
 package com.cdqd.service.impl;
 
 import com.cdqd.core.Block;
-import com.cdqd.data.MetaData;
 import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.exception.ServerException;
 import com.cdqd.service.BlockChainService;
@@ -26,7 +25,7 @@ import static com.cdqd.data.MetaData.peerData;
 @Service
 public class BlockChainServiceImpl implements BlockChainService {
 
-    private static final Logger logger = LoggerFactory.getLogger(BlockChainServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(BlockServiceImpl.class);
 
     private int size = 10;
 
@@ -47,14 +46,20 @@ public class BlockChainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public void syncBlock() {
+    public boolean syncBlock() {
         for (Map.Entry<Integer, String> entry : peerData.getAvailableOrder().entrySet()) {
             try {
                 doSync(entry.getValue());
+                return true;
             } catch (Exception e) {
-
+                // 如果发生区块写入失败的情况，则不将该Order节点加入可疑节点
+                if (!ResponseCodeEnum.INSERT_BLOCK_FAILED.getMessage().equals(e.getMessage())) {
+                    peerData.addDoubtOrder(entry.getKey());
+                }
+                logger.warn("从节点 {} 同步区块失败, Message: ", entry.getValue(), e.getMessage());
             }
         }
+        return false;
     }
 
     @Override

@@ -27,9 +27,9 @@ import java.util.List;
  * Created At 2020/2/9
  */
 @Service
-public class BlockChainServiceImpl implements BlockService {
+public class BlockServiceImpl implements BlockService {
 
-    private final static Logger logger = LoggerFactory.getLogger(BlockChainServiceImpl.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockServiceImpl.class);
 
     @Autowired
     private BlockModelMapper blockMapper;
@@ -54,7 +54,7 @@ public class BlockChainServiceImpl implements BlockService {
             BlockContentModel contentModel = new BlockContentModel(block.getIndex(), content.getContent());
             insert(contentModel);
         }
-        logger.info("追加区块成功, 区块索引: {}", block.getIndex());
+        logger.info("区块写入成功, 区块索引: {}", block.getIndex());
     }
 
     @Override

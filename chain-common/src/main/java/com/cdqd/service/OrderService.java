@@ -48,15 +48,25 @@ public interface OrderService {
 
     /**
      * 向其他节点广播区块
-     * @param address
-     * @param block
+     *
+     * @param address   目标地址
+     * @param block     要广播的区块
      */
     void broadcastBlock(String address, Block block);
 
     /**
      * 向其他节点广播写入区块消息
-     * @param address
+     *
+     * @param address   目标地址
      */
     void broadcastAckBlock(String address);
 
+    /**
+     * 向Order节点提交数据
+     *
+     * @param address 目标地址
+     * @param peerId  peerId
+     * @param data    提交的数据
+     */
+    void commitData(String address, Integer peerId, String data);
 }

@@ -36,4 +36,18 @@ public interface NetworkService {
      * @return
      */
     List<Block> pullBlock(String address, int startIndex, int size);
+
+    /**
+     * 检查与Order节点之间的心跳连接
+     * @param address
+     * @return
+     */
+    int heartConn(String address);
+
+    /**
+     * 向Order节点提交数据
+     * @param data
+     * @return
+     */
+    boolean commitData(String data);
 }
