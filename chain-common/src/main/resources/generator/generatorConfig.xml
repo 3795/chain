@@ -3,7 +3,8 @@
         PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
-    <classPathEntry location="D:/Develop/Java/jars/mysql-connector-java-5.1.46.jar"/>
+<!--    <classPathEntry location="D:/Develop/Java/jars/mysql-connector-java-5.1.46.jar"/>-->
+    <classPathEntry location="D:/Qidi/jars/mysql-connector-java-5.1.46.jar"/>
     <context id="MonitorPlatformTables" targetRuntime="MyBatis3">
         <commentGenerator>
             <property name="suppressDate" value="false"/>
@@ -11,7 +12,7 @@
             <property name="suppressAllComments" value="true"/>
         </commentGenerator>
         <!--数据库链接URL，用户名、密码 -->
-        <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://127.0.0.1:3306/order01"
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://127.0.0.1:3306/ca"
                         userId="root" password="root">
         </jdbcConnection>
         <javaTypeResolver>
@@ -33,6 +34,7 @@
         <!-- 要生成的表 tableName是数据库中的表名或视图名 domainObjectName是实体类名-->
         <!--<table tableName="block" domainObjectName="BlockModel" enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true" enableSelectByExample="true" selectByExampleQueryId="true"/>-->
         <!--<table tableName="block_content" domainObjectName="BlockContentModel" enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true" enableSelectByExample="true" selectByExampleQueryId="true"/>-->
+<!--        <table tableName="node_info" domainObjectName="NodeInfoModel" enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true" enableSelectByExample="true" selectByExampleQueryId="true"/>-->
 
     </context>
 </generatorConfiguration>
