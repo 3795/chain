@@ -78,7 +78,6 @@
     <if test="distinct" >
       distinct
     </if>
-    'true' as QUERYID,
     <include refid="Base_Column_List" />
     from node_info
     <if test="_parameter != null" >

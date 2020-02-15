@@ -12,6 +12,9 @@ public enum ResponseCodeEnum {
     EMPTY_CHAIN(13, "区块链为空"),
     IGNORE_BROAD_BLOCK(14, "忽略广播收到的区块"),
     INSERT_BLOCK_FAILED(15, "区块校验失败，追加区块取消"),
+    NODE_ID_REPEAT(16, "节点ID重复"),
+    PUBLIC_KEY_NOT_EXIST(17, "公钥不存在"),
+    UPDATE_FAILED(18, "更新记录失败"),
 
     ;
     private int code;

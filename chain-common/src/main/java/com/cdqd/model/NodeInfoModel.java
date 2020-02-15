@@ -1,5 +1,7 @@
 package com.cdqd.model;
 
+import com.cdqd.enums.StatusEnum;
+
 import java.util.Date;
 
 public class NodeInfoModel {
@@ -20,6 +22,17 @@ public class NodeInfoModel {
     private Integer status;
 
     private Integer blockIndex;
+
+    public NodeInfoModel(Integer nodeId, String name, String publicKey, String address, Integer type) {
+        this.nodeId = nodeId;
+        this.name = name;
+        this.address = address;
+        this.type = type;
+        this.publicKey = publicKey;
+        this.registerTime = new Date();
+        this.blockIndex = 0;
+        this.status = StatusEnum.ON.getCode();
+    }
 
     public Integer getId() {
         return id;
