@@ -72,10 +72,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void commitData(String address, Integer peerId, String data) {
+    public void commitData(String address, Integer peerId, String data, String sign) {
         Map<String, Object> params = new HashMap<>();
         params.put("peerId", peerId);
         params.put("data", data);
+        params.put("sign", sign);
         httpService.post(HTTP_PREFIX + address + "/order/commit-data", params);
     }
 

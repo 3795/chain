@@ -46,8 +46,9 @@ public interface NetworkService {
 
     /**
      * 向Order节点提交数据
-     * @param data
+     * @param data  数据
+     * @param sign  数据的签名
      * @return
      */
-    boolean commitData(String data);
+    boolean commitData(String data, String sign);
 }

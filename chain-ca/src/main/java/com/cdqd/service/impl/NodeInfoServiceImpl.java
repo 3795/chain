@@ -40,6 +40,7 @@ public class NodeInfoServiceImpl implements NodeInfoService {
             model.setAddress(address);
             model.setStatus(StatusEnum.ON.getCode());
             model.setRegisterTime(new Date());
+            model.setPublicKey(publicKey);
             update(model);
         } else {
             throw new ServerException(ResponseCodeEnum.NODE_ID_REPEAT);

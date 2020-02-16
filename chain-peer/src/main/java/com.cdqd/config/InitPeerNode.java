@@ -1,17 +1,24 @@
 package com.cdqd.config;
 
+import com.cdqd.client.CaClient;
 import com.cdqd.core.Block;
 import com.cdqd.core.ChainData;
 import com.cdqd.data.PeerData;
+import com.cdqd.enums.NodeTypeEnum;
+import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.service.NetworkService;
+import com.cdqd.util.EncryptUtil;
+import com.cdqd.vo.ServerResponseVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
+import java.security.KeyPair;
 import java.util.Map;
 
 import static com.cdqd.data.MetaData.*;
@@ -37,12 +44,17 @@ public class InitPeerNode {
     @Autowired
     private BlockChainService blockChainService;
 
+    @Resource
+    private CaClient caClient;
+
     @PostConstruct
     public void init() {
 
         initPeerNode();
 
-        nodeAuthentication();
+        if(!nodeAuthentication()) {
+            return;
+        }
 
         if (!connToOrder()) {
             return;
@@ -57,6 +69,7 @@ public class InitPeerNode {
 
     /**
      * 从Order节点处同步区块
+     *
      * @return
      */
     private boolean syncBlock() {
@@ -86,8 +99,26 @@ public class InitPeerNode {
      * @return
      */
     private boolean nodeAuthentication() {
-        logger.info("CA节点身份认证成功");
-        return true;
+        try {
+            KeyPair keyPair = EncryptUtil.getKeyPair();
+            String publicKey = EncryptUtil.getPublicKey(keyPair);
+            String privateKey = EncryptUtil.getPrivateKey(keyPair);
+            peerData.setPrivateKey(privateKey);
+            System.out.println("公钥：" + publicKey);
+            System.out.println("私钥" + privateKey);
+            ServerResponseVO response = caClient.auth(peerData.getId(), peerData.getName(), publicKey,
+                    peerData.getIp() + ":" + peerData.getPort(), NodeTypeEnum.PEER.getType());
+            if (response.getCode() == ResponseCodeEnum.SUCCESS.getCode()) {
+                logger.info("CA节点认证成功");
+                return true;
+            } else {
+                logger.error("CA节点认证失败，节点启动失败! Message: {}", response.getMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            logger.error("生成秘钥对失败，Message：{}", e.getMessage());
+            return false;
+        }
     }
 
     /**
