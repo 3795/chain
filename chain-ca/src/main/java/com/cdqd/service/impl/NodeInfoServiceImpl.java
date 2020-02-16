@@ -31,6 +31,7 @@ public class NodeInfoServiceImpl implements NodeInfoService {
         if (model == null) {
             model = new NodeInfoModel(nodeId, nodeName, publicKey, address, nodeType);
             insert(model);
+            return;
         }
         // Id, name, type 三者一致才能证明为同一节点
         if (model.getName().equals(nodeName) &&
