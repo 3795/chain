@@ -30,7 +30,6 @@ public class PeerController {
         try {
             // 生成签名
             String sign = EncryptUtil.sign(MetaData.peerData.getPrivateKey(), data);
-            System.out.println("签名" + sign);
             boolean result = networkService.commitData(data, sign);
             if (result) {
                 return ServerResponseVO.success("数据提交成功");

@@ -104,8 +104,6 @@ public class InitPeerNode {
             String publicKey = EncryptUtil.getPublicKey(keyPair);
             String privateKey = EncryptUtil.getPrivateKey(keyPair);
             peerData.setPrivateKey(privateKey);
-            System.out.println("公钥：" + publicKey);
-            System.out.println("私钥" + privateKey);
             ServerResponseVO response = caClient.auth(peerData.getId(), peerData.getName(), publicKey,
                     peerData.getIp() + ":" + peerData.getPort(), NodeTypeEnum.PEER.getType());
             if (response.getCode() == ResponseCodeEnum.SUCCESS.getCode()) {
