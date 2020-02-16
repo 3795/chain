@@ -1,16 +1,21 @@
 package com.cdqd.config;
 
+import com.cdqd.client.CaClient;
 import com.cdqd.core.Block;
 import com.cdqd.core.ChainData;
 import com.cdqd.data.OrderData;
+import com.cdqd.enums.NodeTypeEnum;
+import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.service.NetworkService;
+import com.cdqd.vo.ServerResponseVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Map;
 
 import static com.cdqd.data.MetaData.chainData;
@@ -37,13 +42,18 @@ public class InitOrderNode {
     @Autowired
     private NetworkService networkService;
 
+    @Resource
+    private CaClient caClient;
+
     @PostConstruct
     public void init() {
         // 1. 初始化Order节点本身的数据
         initOrderData();
 
         // 2. 认证节点身份
-        nodeAuthentication();
+        if (!nodeAuthentication()) {
+            return;
+        }
 
         // 3. 接入网络
         if (!accessNodeNetwork()) {
@@ -81,9 +91,16 @@ public class InitOrderNode {
     /**
      * 向CA节点认证身份
      */
-    private void nodeAuthentication() {
-        // TODO 2. 向CA节点认证
-        logger.info("CA节点认证成功");
+    private boolean nodeAuthentication() {
+        ServerResponseVO response = caClient.auth(orderData.getId(), orderData.getName(), "",
+                orderData.getAddress(), NodeTypeEnum.ORDER.getType());
+        if (response.getCode() == ResponseCodeEnum.SUCCESS.getCode()) {
+            logger.info("CA节点认证成功");
+            return true;
+        } else {
+            logger.error("CA节点认证失败，节点启动失败! Message: {}", response.getMessage());
+            return false;
+        }
     }
 
     /**

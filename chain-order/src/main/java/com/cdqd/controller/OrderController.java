@@ -1,18 +1,24 @@
 package com.cdqd.controller;
 
+import com.cdqd.client.CaClient;
 import com.cdqd.component.KafkaProducer;
 import com.cdqd.core.Block;
 import com.cdqd.data.MetaData;
 import com.cdqd.dto.BlockDTO;
+import com.cdqd.enums.NodeTypeEnum;
 import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.util.BlockUtil;
+import com.cdqd.util.EncryptUtil;
 import com.cdqd.vo.ServerResponseVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import java.security.KeyPair;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +40,9 @@ public class OrderController {
 
     @Autowired
     private KafkaProducer kafkaProducer;
+
+    @Resource
+    private CaClient caClient;
 
     /**
      * 拉取其他Order节点的网络地址
@@ -107,9 +116,41 @@ public class OrderController {
      */
     @PostMapping("/commit-data")
     public ServerResponseVO kafka(@RequestParam("peerId") Integer peerId,
-                                  @RequestParam("data") String data) {
-        kafkaProducer.send(data);
-        return ServerResponseVO.success("提交内容成功");
+                                  @RequestParam("data") String data,
+                                  @RequestParam("sign") String sign) {
+        // 查询公钥
+        ServerResponseVO response = caClient.getPublicKey(peerId);
+        if (response.getCode() != ResponseCodeEnum.SUCCESS.getCode()) {
+            return ServerResponseVO.error(response.getMessage());
+        }
+        try {
+            // 数据验签
+            String publicKey = response.getData().toString();
+            System.out.println("公钥：" + publicKey);
+            System.out.println("数据" + data);
+            System.out.println("签名" + sign);
+            boolean result = EncryptUtil.verify(publicKey, data, sign);
+            if (!result) {
+                return ServerResponseVO.error("数据非法");
+            }
+            kafkaProducer.send(data);
+            return ServerResponseVO.success("提交内容成功");
+        } catch (Exception e) {
+            logger.error("验签过程出现错误，Message：{}", e.getMessage());
+            return ServerResponseVO.error("验签错误");
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        KeyPair keyPair = EncryptUtil.getKeyPair();
+        String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC7BQQKtgtbyumRuR9bwro+Lrf5Yo3OTSFZjGnNUd3xI9PmT4fbfx+JG5ZJmbUHA/tE6IDXTWz8efjQZWlebPsMJC4Br0NB4VhpXIAFOCXagwRQSMP7cXDRzfe6YMD2bdUCJi9Mp6vVN6UGoBV5+3b+2aNsZ15pXAKPRrDTEdywyQIDAQAB";
+        String privateKey = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBALsFBAq2C1vK6ZG5H1vCuj4ut/lijc5NIVmMac1R3fEj0+ZPh9t/H4kblkmZtQcD+0TogNdNbPx5+NBlaV5s+wwkLgGvQ0HhWGlcgAU4JdqDBFBIw/txcNHN97pgwPZt1QImL0ynq9U3pQagFXn7dv7Zo2xnXmlcAo9GsNMR3LDJAgMBAAECgYBCanOXAjNic9si3yVdxvexIZJARFmrzARt8smYGtzAyEJ2ZgQPVUPzwxJKLQX26dkQDanDzEFKIF7WU01qNTWp6x8JDa4rW/eS6ge9M8L7L1h+YK35M2DNQviY1xEdXtF4d2AOahGRwiScTwqW/7um5h3zR/WTDhO2s1wZyA1DSQJBAPzEuRiw67m0CxMGcpac7T9VoNzTHcCgcGoUvHzzJN6FVQO85D6d6f4apcHXFVg2Rqw5SPsveA1CPRjcJQfwE5cCQQC9aRsK9Cz+XK/AvsR2uSNEkNugVpFXCXAyp6m/h0kfvv+CwHvgwABCP31RAGZqgsC8yx2dq9cy6hDw11+F/GqfAkA1BEYWibVHpB3WhbmvIYcZi6pL5vQMnRo3BdZrFsya57hnKk1tXM3hgFFYEPbnI6s7IGDQXqp9jXEnL7WMrqxNAkEAvAAMGHY+BobG56Ax7slaSR8i72WdQu+aTpz+Lp3AJeN1Rzl4e573YsoTv4ePIB8B4SIWFj7PDbkn8XVEWgAtbwJBAL1ZHkaeg0+pm5R91EemViU3w2ZT7ohJW9MgSQAVgzyWeJmM4OeXtVP9JqSzSFObCF9KJ836Otmt0sLX5i4KkfE=";
+        String data = "block1";
+        String s = "fCo0Q9+fxD2aHVkbk0FNcWaq64U2R0/vZ0PCIX3GN4ZDvXIh8FcSgt4W3ZhFzZExVQY22ndm8K78ZN0SbwmFH9wnv6EoZ53c0IRk2PMnxwfRgn09PGTh+JFxITCz0ZSY5EOqrWH7VpC8TxuREPV0xH8z9qxiKk6R+AJrAkwC0ms=";
+        String sign = EncryptUtil.sign(privateKey, data);
+        System.out.println(EncryptUtil.verify(publicKey, data, s));
+        System.out.println(s);
+        System.out.println(sign);
     }
 
     /**
@@ -137,6 +178,7 @@ public class OrderController {
 
     /**
      * 接收Leader发出的Ack信息
+     *
      * @return
      */
     @PostMapping("/ack-block")
@@ -159,5 +201,4 @@ public class OrderController {
         }
         return ServerResponseVO.success("OK");
     }
-
 }

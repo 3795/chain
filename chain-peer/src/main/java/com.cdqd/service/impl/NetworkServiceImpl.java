@@ -79,10 +79,10 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     @Override
-    public boolean commitData(String data) {
+    public boolean commitData(String data, String sign) {
         for (Map.Entry<Integer, String> entry : peerData.getAvailableOrder().entrySet()) {
             try {
-                orderService.commitData(entry.getValue(), peerData.getId(), data);
+                orderService.commitData(entry.getValue(), peerData.getId(), data, sign);
                 return true;
             } catch (Exception e) {
                 /**

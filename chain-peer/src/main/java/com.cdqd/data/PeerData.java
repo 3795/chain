@@ -23,6 +23,8 @@ public class PeerData {
 
     private Integer port;
 
+    private String privateKey;
+
     // 记录Order节点的文职
     private volatile Map<Integer, String> orderAddressMap = new ConcurrentHashMap<>();
 
@@ -113,5 +115,13 @@ public class PeerData {
             this.doubtOrderMap.remove(orderId);
             logger.info("已移除无响应Order节点，OrderId: {}, Address: {}", orderId, info);
         }
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 }
