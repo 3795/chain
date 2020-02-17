@@ -3,6 +3,7 @@ package com.cdqd.service.impl;
 import com.cdqd.core.Block;
 import com.cdqd.enums.ResponseCodeEnum;
 import com.cdqd.exception.ServerException;
+import com.cdqd.service.AsyncService;
 import com.cdqd.service.BlockChainService;
 import com.cdqd.service.BlockService;
 import com.cdqd.service.NetworkService;
@@ -32,6 +33,13 @@ public class BlockChainServiceImpl implements BlockChainService {
 
     @Autowired
     private NetworkService networkService;
+
+    @Autowired
+    private AsyncService asyncService;
+
+    private static volatile int successCount = 0;      // 广播成功的次数
+
+    private static volatile int addressCount = 0;      // 需要广播的地址总数
 
     @Override
     public boolean chainExist() {
@@ -74,7 +82,7 @@ public class BlockChainServiceImpl implements BlockChainService {
             for (Block block : blockList) {
                 insertBlock(block);
                 startIndex += 1;
-                count ++;
+                count++;
             }
         }
         long endTime = System.currentTimeMillis();
@@ -82,12 +90,13 @@ public class BlockChainServiceImpl implements BlockChainService {
     }
 
     /**
-     *  并发的对其他Order节点进行广播
-     *  其他Order节点收到广播的区块后，先放入临时区域，并响应
-     *  Leader节点收到大于n/2的节点响应后，广播一个写入区块的ack消息，其他Order节点收到ack消息后，将临时区域的区块写入存储系统
-     *  Leader节点将区块写入自己的存储系统
-     *  流程中，如果leader意外死亡，因为消息没有ack，则消息还是会被下一个leader消费掉，不会发生消息丢失
-     *  如果本次广播过程中，出现失败的情况，则放弃后续所有流程，消息未被消费，直接进入到下一次循环
+     * 并发的对其他Order节点进行广播
+     * 其他Order节点收到广播的区块后，先放入临时区域，并响应
+     * Leader节点收到大于n/2的节点响应后，广播一个写入区块的ack消息，其他Order节点收到ack消息后，将临时区域的区块写入存储系统
+     * Leader节点将区块写入自己的存储系统
+     * 流程中，如果leader意外死亡，因为消息没有ack，则消息还是会被下一个leader消费掉，不会发生消息丢失
+     * 如果本次广播过程中，出现失败的情况，则放弃后续所有流程，消息未被消费，直接进入到下一次循环
+     *
      * @param messageList
      * @return
      */
@@ -114,20 +123,39 @@ public class BlockChainServiceImpl implements BlockChainService {
 
     @Override
     public boolean broadcast(Block block) {
-        int count = 0;
-        int total = 0;
-        // 这个地方比较耗时，后续用并发优化
+        successCount = 0;
+        addressCount = 0;
         for (Map.Entry<Integer, String> entry : orderData.getAvailableOrder().entrySet()) {
-            boolean result = networkService.broadcastBlock(entry.getValue(), block);
-            if (result) {
-                count ++;
-            } else {
-                // 发送失败，则将该节点信息加入怀疑节点，确认节点是否存活
-                orderData.addDoubtOrder(entry.getKey());
-            }
-            total ++;
+            asyncService.broadcastBlock(entry.getValue(), block);
         }
-        return count != 0 && 2 * count >= total;
+        while (true) {
+            if (addressCount >= orderData.getAvailableOrder().size()) {
+                break;
+            } else {
+                try {
+                    // 睡眠500ms
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        logger.info("广播过程完成，successCount: {}, addressCount: {}", successCount, addressCount);
+        return successCount != 0 && 2 * successCount >= addressCount;
+    }
+
+    /**
+     * 安全增加广播成功次数
+     */
+    synchronized static void addSuccessCount() {
+        successCount++;
+    }
+
+    /**
+     * 广播的次数+1
+     */
+    synchronized static void addAddressCount() {
+        addressCount++;
     }
 
 
