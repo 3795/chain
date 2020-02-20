@@ -92,20 +92,6 @@ public class OrderController {
     }
 
     /**
-     * 临时接口，方便测试功能，后续删除
-     * 添加内容，并生成区块
-     *
-     * @param contents
-     * @return
-     */
-    @PostMapping("/add-block")
-    public ServerResponseVO addBlock(@RequestParam("contents") List<String> contents) {
-        Block block = Block.generateBlock(chainData, contents);
-        blockChainService.insertBlock(block);
-        return ServerResponseVO.success("添加区块成功");
-    }
-
-    /**
      * Peer节点向Order节点提交内容
      *
      * @param data
@@ -176,6 +162,7 @@ public class OrderController {
                  * 4. Order节点收到了ack消息，写入系统时，区块校验失败，此时应以Leader节点为准，抛弃广播收到的区块，直接同步区块
                  */
                 blockChainService.insertBlock(block);
+                chainData.setTmpBlock(null);        // 清空临时保存的区块
             } catch (Exception e) {
                 logger.error("Ack区块失败，Message: {}", e.getMessage());
             }

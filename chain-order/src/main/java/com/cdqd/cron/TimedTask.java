@@ -45,7 +45,8 @@ public class TimedTask {
                 if ((blockIndex - chainData.getIndex()) > 1) {
                     // 区块高度差大于1，则说明广播过程或接收过程出现了问题
                     // 直接以该节点为基准，进行区块同步
-                    logger.warn("本地区块出现滞后性，开始以节点 {} 为准进行同步，本地高度: {}, 目标高度: {}");
+                    logger.warn("本地区块出现滞后性，开始以节点 {} 为准进行同步，本地高度: {}, 目标高度: {}", entry.getValue(),
+                            chainData.getIndex(), blockIndex);
                     try {
                         blockChainService.syncBlock(entry.getValue());
                     } catch (Exception e) {
